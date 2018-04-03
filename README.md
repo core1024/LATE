@@ -21,5 +21,5 @@ git clone https://github.com/greiman/PetitFS.git
 
 ## Games (WIP):
  * bGun - No score, no speed increase
- * Tetris - Pretty much done
+ * Tetris - No speed increase
  * Snake - No speed increase, lame score
