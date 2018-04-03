@@ -148,7 +148,7 @@ static void game_on(void) {
       }
       game_frame();
     } // if btns
-    if (current_time > target_time + 1000) {
+    if (current_time > target_time + 400) {
       game_frame();
     }
     game_draw();
