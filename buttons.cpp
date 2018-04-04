@@ -47,7 +47,7 @@ uint8_t buttonsRead(void) {
          GET_BTN(btnPinLeft, BTN_GO_DIR_LEFT) |
          GET_BTN(btnPinB, BTN_GO_B) |
          GET_BTN(btnPinC, BTN_GO_C);
-    return btnPrev == btnNow ? btnNow : btnNow & btnPrev ^ btnNow;
+    return btnPrev == btnNow ? btnNow : btnNow & (btnPrev ^ btnNow);
 }
 
 uint8_t buttonsUpdate(void) {

@@ -14,7 +14,7 @@
 #define MENU_NEW 1
 #define MENU_RESUME 2
 
-#define buttonIs(haystack, needle) !!((haystack & needle) == needle)
+#define buttonIs(haystack, needle) !!((haystack) & (needle))
 
 void buttonsSetup(const uint8_t setRot, const uint8_t pinA, const uint8_t pinRight, const uint8_t pinLeft, const uint8_t pinUp, const uint8_t pinDown, const uint8_t pinB, const uint8_t pinC);
 void buttonsRotate(uint8_t setRot);
