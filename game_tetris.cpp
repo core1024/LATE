@@ -13,6 +13,7 @@ struct data_t {
   uint32_t hiScore;
   uint16_t screen[BOARD_LINES];
   uint8_t level;
+  uint8_t lines;
   uint8_t bag[7];
   uint8_t bag_pos;
   uint8_t tet_now_sel;
@@ -106,9 +107,14 @@ static void remove_lines() {
       line_down(j);
     }
   }
-  data->score += lines_points[lines_removed] * (data->level + 1);
+  data->score += lines_points[lines_removed] * data->level;
   if (data->score > data->hiScore) {
     data->hiScore = data->score;
+  }
+  data->lines += lines_removed;
+  if (data->lines > data->level * 10) {
+    data->lines = 0;
+    data->level++;
   }
 }
 
@@ -136,10 +142,10 @@ static void display_board() {
   gr->firstPage();
   do {
     const uint8_t next[4] = {
-      tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111,
-      (tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111 << 4) >> 4,
-      (tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111 << 8) >> 8,
-      (tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111 << 12) >> 12
+      (const uint8_t)(tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111),
+      (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 4) & 0b1111),
+      (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 8) & 0b1111),
+      (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 12) & 0b1111)
     };
     gr->drawXBM(blockScale(10) + 2, 1, 4, 4, next);
 
@@ -150,6 +156,10 @@ static void display_board() {
     gr->setFontDirection(1);
     itoa(data->score, strnum, 10);
     gr->drawStr(blockScale(10) + 2, BLOCK_LINE + 1, strnum);
+    itoa(data->lines, strnum, 10);
+    gr->drawStr(blockScale(10) + 2, blockScale(10), strnum);
+    itoa(data->level, strnum, 10);
+    gr->drawStr(blockScale(10) + 2, blockScale(15), strnum);
     gr->setFontDirection(0);
     for (int x = 1; x <= 10; x++) {
       for (int y = 0; y < 20; y++) {
@@ -174,9 +184,7 @@ static void game_on() {
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 0);
       dx = data->tx + (buttonIs(current_key, BTN_GO_RIGHT) - buttonIs(current_key, BTN_GO_LEFT));
       dy = data->ty + buttonIs(current_key, BTN_GO_DOWN);
-      if (buttonIs(current_key, BTN_GO_A) || buttonIs(current_key, BTN_GO_UP)) {
-        dr = (data->tet_now_rot + 1) % 4;
-      }
+      dr = (data->tet_now_rot + buttonIs(current_key, BTN_GO_A | BTN_GO_UP)) % 4;
 
       if (fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
         data->tx = dx;
@@ -191,7 +199,7 @@ static void game_on() {
       continue;
     }
 
-    if (millis() - redraw_time > 250) {
+    if (millis() > redraw_time + (400 + 250 * (9 - min(9, data->level))) / 3) {
       redraw_time = millis();
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 0);
       if (fit_tetromino(data->tx, data->ty + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
@@ -223,7 +231,8 @@ static void game_on() {
 
 static void game_new(void) {
   data->score = 0;
-  data->level = 0;
+  data->lines = 0;
+  data->level = 1;
   data->tx = dx = 3;
   data->ty = dy = 0;
 
