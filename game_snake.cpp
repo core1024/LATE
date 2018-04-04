@@ -25,7 +25,7 @@ struct data_t {
 
 static struct data_t *data;
 
-static uint8_t btns, btns_prev;
+static uint8_t btns;
 
 static unsigned long current_time, target_time;
 
@@ -110,6 +110,8 @@ static void game_draw(void) {
   char strnum[12];
   gr->firstPage();
   do {
+    gr->setCursor(0, BLOCK_LINE - 1);
+    gr->print(F("SNAKE"));
     gr->setFontDirection(1);
     itoa(data->score, strnum, 10);
     gr->drawStr(blockScale(10) + 2, BLOCK_LINE + 1, strnum);
