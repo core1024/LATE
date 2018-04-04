@@ -131,10 +131,10 @@ void loop() {
       case BTN_GO_A:
         game_on = 1;
         break;
-      //      case BTN_GO_B:
-      //        rot = (rot + 1) % 4;
-      //        rotateDisplay(rot);
-      //        break;
+      case BTN_GO_B:
+        rot = (rot + 2) % 4;
+        rotateDisplay(rot);
+        break;
       default:
         break;
     }
@@ -199,9 +199,12 @@ void loop() {
       } while (u8g2.nextPage());
       switch (buttonsUpdate()) {
         case BTN_GO_A:
-        case BTN_GO_RIGHT: menu = MENU_NEW; goto end_menu; break;
+          menu = game_on ? MENU_RESUME : MENU_NEW; goto end_menu;
+        case BTN_GO_RIGHT:
+          menu = MENU_NEW; goto end_menu;
         case BTN_GO_B:
-        case BTN_GO_LEFT: menu = MENU_EXIT; goto end_menu; break;
+        case BTN_GO_LEFT:
+          menu = MENU_EXIT; goto end_menu;
         case BTN_GO_DOWN:
           if (game_on) {
             menu = MENU_RESUME; goto end_menu;
@@ -209,7 +212,6 @@ void loop() {
           break;
         default:
           continue;
-          break;
       }
     }
 end_menu:
