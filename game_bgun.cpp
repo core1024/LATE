@@ -145,11 +145,9 @@ static void game_reset(void) {
 }
 
 static void game_new(void) {
-  data->gameOn = 1;
-  data->gunPos = 5;
   data->score = 0;
   data->lives = 5;
-  resetTarget();
+  game_reset();
 }
 
 // State functions
