@@ -154,11 +154,11 @@ static void display_board() {
 
     blockDrawFrame();
     gr->setFontDirection(1);
-    itoa(data->score, strnum, 10);
+    ltoa(data->score, strnum, 10);
     gr->drawStr(blockScale(10) + 2, BLOCK_LINE + 1, strnum);
-    itoa(data->lines, strnum, 10);
+    ltoa(data->lines, strnum, 10);
     gr->drawStr(blockScale(10) + 2, blockScale(10), strnum);
-    itoa(data->level, strnum, 10);
+    ltoa(data->level, strnum, 10);
     gr->drawStr(blockScale(10) + 2, blockScale(15), strnum);
     gr->setFontDirection(0);
     for (int x = 1; x <= 10; x++) {
