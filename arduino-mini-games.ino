@@ -10,7 +10,7 @@
 
 //type func(const __FlashStringHelper *progmem_str);
 
-#include "PetitFS.h"
+#include <PetitFS.h>
 // The SD chip select pin is currently defined as 5
 // in pffArduino.h.  Edit pffArduino.h to change the CS pin.
 
@@ -22,6 +22,7 @@ FATFS fs;     /* File system object */
 #include "game_bgun.h"
 #include "game_tetris.h"
 #include "game_snake.h"
+#include "game_sudoku.h"
 
 #define BTN_PIN_UP 9
 #define BTN_PIN_DOWN 6
@@ -46,7 +47,7 @@ U8G2_SH1106_128X64_NONAME_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /*
 const uint8_t game_data_sz = 240;
 uint8_t game_data[game_data_sz];
 
-const uint8_t games_count = 3;
+const uint8_t games_count = 4;
 struct game_t games[games_count];
 
 uint8_t rot = 1;
@@ -87,6 +88,8 @@ void setup() {
   games[1].play = &gameTetris;
   games[2].name  = (char *)"SNAKE";
   games[2].play = &gameSnake;
+  games[3].name  = (char *)"SUDOKU";
+  games[3].play = &gameSudoku;
 
   buttonsSetup(0, BTN_PIN_A, BTN_PIN_RIGHT, BTN_PIN_LEFT, BTN_PIN_UP, BTN_PIN_DOWN, BTN_PIN_B, BTN_PIN_C);
   u8g2.begin(BTN_PIN_A, BTN_PIN_RIGHT, BTN_PIN_LEFT, BTN_PIN_UP, BTN_PIN_DOWN, BTN_PIN_B);
@@ -116,9 +119,25 @@ void loop() {
   uint32_t score, hiScore;
   uint8_t menu;
   uint8_t game_on = 0;
+  uint8_t btns = 1, i;
 
   while (!game_on) {
-    uint8_t btns, i;
+    if(btns) {
+      u8g2.firstPage();
+      do {
+        u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
+        u8g2.setCursor(2, fh + 1);
+        u8g2.print(F("MAIN MENU"));
+        u8g2.drawHLine(0, fh + 2, u8g2.getWidth());
+
+        u8g2.drawGlyph(2, fh * choice + fh + fh + 4, '>');
+
+        for (i = 0; i < games_count; i++) {
+          u8g2.drawStr(8, fh * i + fh + fh + 4, games[i].name);
+        }
+      } while (u8g2.nextPage());
+    }
+
     btns = buttonsUpdate();
     switch (btns) {
       case BTN_GO_UP:
@@ -138,20 +157,6 @@ void loop() {
       default:
         break;
     }
-
-    u8g2.firstPage();
-    do {
-      u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
-      u8g2.setCursor(2, fh + 1);
-      u8g2.print(F("MAIN MENU"));
-      u8g2.drawHLine(0, fh + 2, u8g2.getWidth());
-
-      u8g2.drawGlyph(2, fh * choice + fh + fh + 4, '>');
-
-      for (i = 0; i < games_count; i++) {
-        u8g2.drawStr(8, fh * i + fh + fh + 4, games[i].name);
-      }
-    } while (u8g2.nextPage());
   }
 
   // Reset the display driver
@@ -176,28 +181,33 @@ void loop() {
 
   do {
     // Show the menu
+    btns = 1;
     for (;;) {
-      u8g2.firstPage();
-      do {
-        u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
-        u8g2.setCursor(2, 9);
-        u8g2.print(games[choice].name);
-        u8g2.drawHLine(0, 11, u8g2.getWidth());
-        u8g2.setCursor(2, 21);
-        u8g2.print(F("> - Start"));
-        u8g2.setCursor(2, 31);
-        u8g2.print(F("< - Exit"));
-        if (game_on) {
-          u8g2.setCursor(2, 41);
-          u8g2.print(F("v - Resume"));
-        }
-        u8g2.setCursor(2, 51);
-        u8g2.print(score);
+      if(btns) {
+        u8g2.firstPage();
+        do {
+          u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
+          u8g2.setCursor(2, 9);
+          u8g2.print(games[choice].name);
+          u8g2.drawHLine(0, 11, u8g2.getWidth());
+          u8g2.setCursor(2, 21);
+          u8g2.print(F("> - Start"));
+          u8g2.setCursor(2, 31);
+          u8g2.print(F("< - Exit"));
+          if (game_on) {
+            u8g2.setCursor(2, 41);
+            u8g2.print(F("v - Resume"));
+          }
+          u8g2.setCursor(2, 51);
+          u8g2.print(score);
 
-        u8g2.setCursor(2, 61);
-        u8g2.print(hiScore);
-      } while (u8g2.nextPage());
-      switch (buttonsUpdate()) {
+          u8g2.setCursor(2, 61);
+          u8g2.print(hiScore);
+        } while (u8g2.nextPage());
+      }
+
+      btns = buttonsUpdate();
+      switch (btns) {
         case BTN_GO_A:
           menu = game_on ? MENU_RESUME : MENU_NEW; goto end_menu;
         case BTN_GO_RIGHT:
@@ -211,7 +221,7 @@ void loop() {
           }
           break;
         default:
-          continue;
+          break;
       }
     }
 end_menu:
