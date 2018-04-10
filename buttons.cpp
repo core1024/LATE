@@ -9,7 +9,7 @@
 #define BTN_GO_DIR_LEFT BTN_GO_DIR(7)
 
 
-static uint8_t btnRot = 0, btnPrev = 0, btnPinA, btnPinRight, btnPinLeft, btnPinUp, btnPinDown, btnPinB, btnPinC;
+static uint8_t btnRot = 0, btnPinA, btnPinRight, btnPinLeft, btnPinUp, btnPinDown, btnPinB, btnPinC;
 static const uint8_t btnDir[] = {
   BTN_GO_UP,
   BTN_GO_RIGHT,
@@ -40,14 +40,13 @@ void buttonsRotate(uint8_t setRot) {
 }
 
 uint8_t buttonsRead(void) {
-  const uint8_t btnNow = GET_BTN(btnPinA, BTN_GO_A) |
+  return GET_BTN(btnPinA, BTN_GO_A) |
          GET_BTN(btnPinUp, BTN_GO_DIR_UP) |
          GET_BTN(btnPinRight, BTN_GO_DIR_RIGHT) |
          GET_BTN(btnPinDown, BTN_GO_DIR_DOWN) |
          GET_BTN(btnPinLeft, BTN_GO_DIR_LEFT) |
          GET_BTN(btnPinB, BTN_GO_B) |
          GET_BTN(btnPinC, BTN_GO_C);
-    return btnPrev == btnNow ? btnNow : btnNow & (btnPrev ^ btnNow);
 }
 
 uint8_t buttonsUpdate(void) {
@@ -57,7 +56,7 @@ uint8_t buttonsUpdate(void) {
   uint8_t btns = buttonsRead();
   if (btns && (current_time > btns_last_time + 50 || btns_last != btns)) {
     if (btns_last != btns) {
-      btns_last_time = current_time + 150;
+      btns_last_time = current_time + 300;
     } else {
       btns_last_time = current_time;
     }
