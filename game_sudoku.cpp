@@ -44,8 +44,9 @@ static void display_board(void) {
   gr->firstPage();
   do {
     uint8_t i, x, y;
-    gr->setCursor(0, 1);
+    gr->setCursor(0, 0);
     gr->print(F("SUDOKU"));
+    gr->drawHLine(0, 6, 63);
 
     // Game board
     for (i = 0; i < 81; i++) {
