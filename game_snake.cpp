@@ -113,7 +113,7 @@ static void game_draw(void) {
     gr->setCursor(0, 0);
     gr->print(F("SNAKE"));
     gr->setFontDirection(1);
-    itoa(data->score, strnum, 10);
+    ltoa(data->score, strnum, 10);
     gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);
     gr->setFontDirection(0);
     blockDrawFrame();
