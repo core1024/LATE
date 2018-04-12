@@ -100,6 +100,10 @@ static void moveBullets(void) {
         data->target.col[t]++;
         bullets[b][1] = 0;
         if (targetCleared()) {
+          data->score++;
+          if (data->score > data->hiScore) {
+            data->hiScore = data->score;
+          }
           resetTarget();
           resetBullets();
         }
@@ -194,10 +198,15 @@ static void game_on(void) {
 
     gr->firstPage();
     do {
+      char strnum[12];
       blockDrawFrame();
       drawGun();
       drawTarget();
       drawBullets();
+      gr->setFontDirection(1);
+      ltoa(data->score, strnum, 10);
+      gr->setFontDirection(0);
+      gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);
     } while (gr->nextPage());
   } // for(;;)
 }
