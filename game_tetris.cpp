@@ -149,17 +149,17 @@ static void display_board() {
     };
     gr->drawXBM(blockScale(10) + 2, 1, 4, 4, next);
 
-    gr->setCursor(0, BLOCK_LINE - 1);
+    gr->setCursor(0, 0);
     gr->print(F("TETRIS"));
 
     blockDrawFrame();
     gr->setFontDirection(1);
     ltoa(data->score, strnum, 10);
-    gr->drawStr(blockScale(10) + 2, BLOCK_LINE + 1, strnum);
+    gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);
     ltoa(data->lines, strnum, 10);
-    gr->drawStr(blockScale(10) + 2, blockScale(10), strnum);
+    gr->drawStr(blockScale(10) + 6, blockScale(10), strnum);
     ltoa(data->level, strnum, 10);
-    gr->drawStr(blockScale(10) + 2, blockScale(15), strnum);
+    gr->drawStr(blockScale(10) + 6, blockScale(15), strnum);
     gr->setFontDirection(0);
     for (int x = 1; x <= 10; x++) {
       for (int y = 0; y < 20; y++) {

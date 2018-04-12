@@ -8,6 +8,27 @@
 #include <Wire.h>
 #endif
 
+const uint8_t vladofont[635] U8G2_FONT_SECTION("vladofont") = 
+  "?\2\3\2\3\3\1\4\4\5\5\0\373\0\0\0\373\1)\0\0\2b \6\356\361s\2!\10\356"
+  "q\245u\60\3\42\10\356\361\324\222\234\14#\14\356\361\224\24)\211\6)\211\0$\12\356\361LI\70"
+  "&\321\4%\13\356qH\211\22V\224H\1&\13\356\361hQ\246\224\62%\1'\10\356\361\244\71\13"
+  "\0(\10\356q\205i\71\3)\10\356q\305i\61\3*\13\356q$\245\203\64%\25\0+\11\356\361"
+  "#\341\230C\0,\7\356\361S\303\24-\7\356\361\303;\1.\7\356\361\63\206\0/\6\356q\366\12"
+  "\60\13\356\361L\221\322\42E\23\0\61\10\356q\205jq\2\62\12\356\361LY\246\205\203\2\63\11\356"
+  "\361\314\231\34M\0\64\12\356\361\205Z\22\15b\4\65\13\356q\14J:\304\311\20\1\66\12\356\361L"
+  "\351\20e\321\4\67\10\356q\14b\265\6\70\12\356\361LY\64e\321\4\71\12\356\361LY\64\244\321"
+  "\4:\11\356\361#\71\230C\0;\10\356q\345\264\60\4<\10\356\361\205\345\22\0=\11\356\361\3;"
+  "\264#\0>\10\356\361\304\305\42\0?\12\356\361LY\246c\31\0@\13\356\361LY\222,\311\24\2"
+  "A\14\356q\205I\224%\203\222%\0B\15\356q\14Q\226\14Q\226\14\21\0C\10\356\361Liy"
+  "\2D\15\356q\14Q\226dI\226\14\21\0E\12\356q\14J\272\245\203\2F\12\356q\14J\272\245"
+  ")\0G\12\356\361Li\262d\321\4H\15\356qdI\226\14J\226d\11\0I\10\356\361\214iq"
+  "\2J\12\356\361\214i\226\204\32\0K\14\356qdIT\311\224(K\0L\10\356q\244\255\203\2M"
+  "\13\356qd\211\245[\222%\0N\13\356qd\211\224tR\262\4O\13\356\361LY\222%Y\64\1"
+  "P\13\356q\14Q\226\14Q\232\2Q\12\356\361hQ\27MI\0R\13\356q\14Q\226\14Q[\2"
+  "S\12\356\361\14I<'C\4T\10\356q\14Z\332\6U\14\356qdI\226dI\26M\0V\14"
+  "\356qdI\226dQ\22f\0W\13\356qdI\226\364)\211\0X\13\356qdQ\22V\242,\1"
+  "Y\12\356qdQ\22\246\65\0Z\11\356q\14b\343\240\0[\10\356q\211iU\2\134\12\356qg"
+  "Q\22\346\20\0]\10\356\361\250\215\32\0^\12\356\361#a\22e\71\0\0\0\0";
 //type func(const __FlashStringHelper *progmem_str);
 
 #include <PetitFS.h>
@@ -97,7 +118,8 @@ void setup() {
   //u8g2.setFont(u8g2_font_5x7_tr);
   //u8g2.setFont(u8g2_font_lucasfont_alternate_tr);
   //u8g2.setFont(u8g2_font_mozart_nbp_tr);
-  u8g2.setFont(u8g2_font_chikita_tr);
+  //u8g2.setFont(u8g2_font_chikita_tr);
+  u8g2.setFont(vladofont);
   fh = BLOCK_LINE;
   rotateDisplay(rot);
 
@@ -106,7 +128,7 @@ void setup() {
       u8g2.firstPage();
       do {
         u8g2.setCursor(2, fh + 1);
-        u8g2.print(F("SD Error"));
+        u8g2.print(F("SD ERROR"));
       } while (u8g2.nextPage());
       while (!buttonsUpdate());
     } else {
@@ -126,14 +148,14 @@ void loop() {
       u8g2.firstPage();
       do {
         u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
-        u8g2.setCursor(2, fh + 1);
+        u8g2.setCursor(2, fh - 4);
         u8g2.print(F("MAIN MENU"));
         u8g2.drawHLine(0, fh + 2, u8g2.getWidth());
 
-        u8g2.drawGlyph(2, fh * choice + fh + fh + 4, '>');
+        u8g2.drawGlyph(2, fh * choice + fh + fh - 1, '>');
 
         for (i = 0; i < games_count; i++) {
-          u8g2.drawStr(8, fh * i + fh + fh + 4, games[i].name);
+          u8g2.drawStr(8, fh * i + fh + fh - 1, games[i].name);
         }
       } while (u8g2.nextPage());
     }
@@ -187,21 +209,21 @@ void loop() {
         u8g2.firstPage();
         do {
           u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
-          u8g2.setCursor(2, 9);
+          u8g2.setCursor(2, 2);
           u8g2.print(games[choice].name);
-          u8g2.drawHLine(0, 11, u8g2.getWidth());
+          u8g2.drawHLine(0, 8, u8g2.getWidth());
+          u8g2.setCursor(2, 11);
+          u8g2.print(F("> - START"));
           u8g2.setCursor(2, 21);
-          u8g2.print(F("> - Start"));
-          u8g2.setCursor(2, 31);
-          u8g2.print(F("< - Exit"));
+          u8g2.print(F("< - EXIT"));
           if (game_on) {
-            u8g2.setCursor(2, 41);
-            u8g2.print(F("v - Resume"));
+            u8g2.setCursor(2, 31);
+            u8g2.print(F("\\ - RESUME"));
           }
-          u8g2.setCursor(2, 51);
+          u8g2.setCursor(2, 41);
           u8g2.print(score);
 
-          u8g2.setCursor(2, 61);
+          u8g2.setCursor(2, 51);
           u8g2.print(hiScore);
         } while (u8g2.nextPage());
       }

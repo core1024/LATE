@@ -44,16 +44,16 @@ static void display_board(void) {
   gr->firstPage();
   do {
     uint8_t i, x, y;
-    gr->setCursor(0, 5);
+    gr->setCursor(0, 1);
     gr->print(F("SUDOKU"));
 
     // Game board
     for (i = 0; i < 81; i++) {
       x = i % 9;
       y = i / 9;
-      gr->setCursor(x * 7 + 1, y * 7 + 12);
       if(data->screen[i] >= '1' && data->screen[i] <= '9') {
         if(check < 2 || (check == 2 && data->screen[i] == solution[i])) {
+          gr->setCursor(x * 7 + 1, y * 7 + 11);
           gr->print(data->screen[i]);
         }
       }
@@ -64,25 +64,25 @@ static void display_board(void) {
       for (i = 0; i < 12; i++) {
         x = i % 3;
         y = i / 3;
-        gr->setCursor(x * 9 + 20, y * 9 + 82);
+        gr->setCursor(x * 9 + 20, y * 9 + 81);
         gr->print(kb_data[i]);
       }
 
       gr->setDrawColor(2);
-      gr->drawBox((kb_cursor % 3) * 9 + 19, (kb_cursor / 3) * 9 + 76, 7 ,7);
+      gr->drawBox((kb_cursor % 3) * 9 + 19, (kb_cursor / 3) * 9 + 80, 7 ,7);
       gr->setDrawColor(1);
-      gr->drawFrame((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 6, 7 ,7);
+      gr->drawFrame((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 10, 7 ,7);
     } else {
       gr->setDrawColor(2);
-      gr->drawBox((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 6, 7 ,7);
+      gr->drawBox((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 10, 7 ,7);
       gr->setDrawColor(1);
     }
 
     // The # grid
-    gr->drawHLine(0, 27, 63);
-    gr->drawHLine(0, 47, 63);
-    gr->drawVLine(21, 6, 63);
-    gr->drawVLine(41, 6, 63);
+    gr->drawHLine(0, 31, 63);
+    gr->drawHLine(0, 51, 63);
+    gr->drawVLine(21, 10, 63);
+    gr->drawVLine(41, 10, 63);
   } while (gr->nextPage());
 }
 
