@@ -8,8 +8,8 @@
 #include <Wire.h>
 #endif
 
-const uint8_t vladofont[635] U8G2_FONT_SECTION("vladofont") = 
-  "?\2\3\2\3\3\1\4\4\5\5\0\373\0\0\0\373\1)\0\0\2b \6\356\361s\2!\10\356"
+const uint8_t vladofont[881] U8G2_FONT_SECTION("vladofont") = 
+  "[\2\3\2\3\3\1\4\4\5\5\0\373\0\373\0\373\1)\2o\3X \6\356\361s\2!\10\356"
   "q\245u\60\3\42\10\356\361\324\222\234\14#\14\356\361\224\24)\211\6)\211\0$\12\356\361LI\70"
   "&\321\4%\13\356qH\211\22V\224H\1&\13\356\361hQ\246\224\62%\1'\10\356\361\244\71\13"
   "\0(\10\356q\205i\71\3)\10\356q\305i\61\3*\13\356q$\245\203\64%\25\0+\11\356\361"
@@ -28,7 +28,16 @@ const uint8_t vladofont[635] U8G2_FONT_SECTION("vladofont") =
   "S\12\356\361\14I<'C\4T\10\356q\14Z\332\6U\14\356qdI\226dI\26M\0V\14"
   "\356qdI\226dQ\22f\0W\13\356qdI\226\364)\211\0X\13\356qdQ\22V\242,\1"
   "Y\12\356qdQ\22\246\65\0Z\11\356q\14b\343\240\0[\10\356q\211iU\2\134\12\356qg"
-  "Q\22\346\20\0]\10\356\361\250\215\32\0^\12\356\361#a\22e\71\0\0\0\0";
+  "Q\22\346\20\0]\10\356\361\250\215\32\0^\12\356\361#a\22e\71\0_\10\356\361\263\15\12\0`"
+  "\7\356q\305\71\31a\12\356q\250\351\26E\23\0b\14\356q\14J:DY\62D\0c\11\356q"
+  "D=\15j\2d\14\356qiI\226D\203\222%\0e\6\355\351\63\2f\12\356q\205SR\32\63"
+  "\0g\10\356q\14J\332\12h\6\355\351\63\2i\14\356qdI\244\264HI\226\0j\13\356qI"
+  "Y\22)-R\2k\6\355\351\63\2l\14\356q\205I\226dI\224%\0m\6\355\351\63\2n\6"
+  "\355\351\63\2o\6\355\351\63\2p\15\356q\14J\226dI\226d\11\0q\15\356\361\14I\26\15I"
+  "\226d\11\0r\6\355\351\63\2s\12\356qdI\377\62(\0t\6\355\351\63\2u\12\356qD\225"
+  "\312\322S\4v\12\356q$=MI/\0w\6\355\351\63\2x\6\355\351\63\2y\11\356qdQ"
+  "\22\266\2z\12\356\361LY&e\321\4\0\0\0";
+
 //type func(const __FlashStringHelper *progmem_str);
 
 #include <PetitFS.h>
@@ -54,7 +63,8 @@ FATFS fs;     /* File system object */
 #define BTN_PIN_C A3
 
 struct game_t {
-  char *name;
+  const __FlashStringHelper *name;
+  char *file;
   void (*play)(U8G2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore);
 };
 
@@ -103,13 +113,17 @@ void setup() {
 
   //  games[0].name = (char *)"Clock";
   //  games[0].play = &gameClock;
-  games[0].name  = (char *)"BGUN";
+  games[0].name = F("CTPElbA");
+  games[0].file = (char *)"BGUN";
   games[0].play = &gameBGun;
-  games[1].name  = (char *)"TETRIS";
+  games[1].name = F("TETPiC");
+  games[1].file = (char *)"TETRIS";
   games[1].play = &gameTetris;
-  games[2].name  = (char *)"SNAKE";
+  games[2].name = F("zMiq");
+  games[2].file = (char *)"SNAKE";
   games[2].play = &gameSnake;
-  games[3].name  = (char *)"SUDOKU";
+  games[3].name = F("CydOKy");
+  games[3].file = (char *)"SUDOKU";
   games[3].play = &gameSudoku;
 
   buttonsSetup(0, BTN_PIN_A, BTN_PIN_RIGHT, BTN_PIN_LEFT, BTN_PIN_UP, BTN_PIN_DOWN, BTN_PIN_B, BTN_PIN_C);
@@ -128,7 +142,7 @@ void setup() {
       u8g2.firstPage();
       do {
         u8g2.setCursor(2, fh + 1);
-        u8g2.print(F("SD ERROR"));
+        u8g2.print(F("SD gPEsKA"));
       } while (u8g2.nextPage());
       while (!buttonsUpdate());
     } else {
@@ -149,13 +163,14 @@ void loop() {
       do {
         u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
         u8g2.setCursor(2, fh - 4);
-        u8g2.print(F("MAIN MENU"));
+        u8g2.print(F("MEHu"));
         u8g2.drawHLine(0, fh + 2, u8g2.getWidth());
 
         u8g2.drawGlyph(2, fh * choice + fh + fh - 1, '>');
 
         for (i = 0; i < games_count; i++) {
-          u8g2.drawStr(8, fh * i + fh + fh - 1, games[i].name);
+          u8g2.setCursor(8, fh * i + fh + fh - 1);
+          u8g2.print(games[i].name);
         }
       } while (u8g2.nextPage());
     }
@@ -192,7 +207,7 @@ void loop() {
   memset(game_data, 0, sizeof(game_data));
 
   UINT nr;
-  if (!pf_open(games[choice].name)) {
+  if (!pf_open(games[choice].file)) {
     pf_read(game_data, sizeof(game_data), &nr);
   }
 
@@ -213,12 +228,12 @@ void loop() {
           u8g2.print(games[choice].name);
           u8g2.drawHLine(0, 8, u8g2.getWidth());
           u8g2.setCursor(2, 11);
-          u8g2.print(F("> - START"));
+          u8g2.print(F("> - CTAPT"));
           u8g2.setCursor(2, 21);
-          u8g2.print(F("< - EXIT"));
+          u8g2.print(F("< - izXOd"));
           if (game_on) {
             u8g2.setCursor(2, 31);
-            u8g2.print(F("\\ - RESUME"));
+            u8g2.print(F("\\ - pPOdalvi"));
           }
           u8g2.setCursor(2, 41);
           u8g2.print(score);
@@ -252,7 +267,7 @@ end_menu:
     (*games[choice].play)(&u8g2, game_data, menu, &game_on, &score, &hiScore);
 
     // SAVE GAME DATA
-    if (!pf_open(games[choice].name)) {
+    if (!pf_open(games[choice].file)) {
       pf_lseek(0);
       pf_write(game_data, sizeof(game_data), &nr);
       pf_write(0, 0, &nr);
