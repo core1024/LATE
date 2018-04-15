@@ -198,6 +198,8 @@ static void game_on(void) {
 
     gr->firstPage();
     do {
+      gr->setCursor(0, 0);
+      gr->print(F("CTPElbA"));
       char strnum[12];
       blockDrawFrame();
       drawGun();

@@ -45,7 +45,7 @@ static void display_board(void) {
   do {
     uint8_t i, x, y;
     gr->setCursor(0, 0);
-    gr->print(F("SUDOKU"));
+    gr->print(F("CydOKy"));
     gr->drawHLine(0, 6, 63);
 
     // Game board

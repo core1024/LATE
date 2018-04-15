@@ -111,7 +111,7 @@ static void game_draw(void) {
   gr->firstPage();
   do {
     gr->setCursor(0, 0);
-    gr->print(F("SNAKE"));
+    gr->print(F("zMiq"));
     gr->setFontDirection(1);
     ltoa(data->score, strnum, 10);
     gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);

@@ -150,7 +150,7 @@ static void display_board() {
     gr->drawXBM(blockScale(10) + 2, 1, 4, 4, next);
 
     gr->setCursor(0, 0);
-    gr->print(F("TETRIS"));
+    gr->print(F("TETPiC"));
 
     blockDrawFrame();
     gr->setFontDirection(1);
