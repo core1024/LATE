@@ -20,7 +20,7 @@ struct data_t {
 
 static struct data_t *data;
 
-static const char kb_data[] = "123456789URC";
+static const char kb_data[] = "123456789{}|";
 static uint8_t kb_cursor, kb_show, cursor, cursor_mx, cursor_my, check;
 
 static char solution[BOARD_SIZE];
@@ -60,6 +60,7 @@ static void display_board(void) {
       }
     }
 
+    gr->setDrawColor(2);
     if(kb_show) {
       // Keypad
       for (i = 0; i < 12; i++) {
@@ -69,15 +70,11 @@ static void display_board(void) {
         gr->print(kb_data[i]);
       }
 
-      gr->setDrawColor(2);
       gr->drawBox((kb_cursor % 3) * 9 + 19, (kb_cursor / 3) * 9 + 80, 7 ,7);
-      gr->setDrawColor(1);
-      gr->drawFrame((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 10, 7 ,7);
-    } else {
-      gr->setDrawColor(2);
-      gr->drawBox((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 10, 7 ,7);
-      gr->setDrawColor(1);
     }
+
+    gr->drawBox((data->cursor % 9) * 7, (data->cursor / 9) * 7 + 10, 7 ,7);
+    gr->setDrawColor(1);
 
     // The # grid
     gr->drawHLine(0, 31, 63);
@@ -137,21 +134,22 @@ static void game_on() {
                 data->gameOn = 0;
                 return;
               }
+              check = 1;
             }
 
-            if(kb_data[kb_cursor] == 'C') {
+            if(kb_data[kb_cursor] == '|') {
               check = 1;
             }
 
             // Undo
-            if(kb_data[kb_cursor] == 'U' && data->undoCurrent > 0) {
+            if(kb_data[kb_cursor] == '{' && data->undoCurrent > 0) {
               data->undoCurrent--;
               data->cursor = data->undoPosition[data->undoCurrent];
               data->screen[data->cursor] = '0';
             }
 
             // Redo
-            if(kb_data[kb_cursor] == 'R' && data->undoCurrent < data->undoLast) {
+            if(kb_data[kb_cursor] == '}' && data->undoCurrent < data->undoLast) {
               data->cursor = data->undoPosition[data->undoCurrent];
               data->screen[data->cursor] = data->undoValue[data->undoCurrent];
               data->undoCurrent++;
