@@ -58,8 +58,10 @@ uint8_t buttonsUpdate(void) {
   if (btns_last != btns) {
     if ((!btns_last && btns) || (current_time > btns_last_time)) {
       ret_btns = btns;
+      btns_last_time = current_time + 170;
+    } else {
+      btns_last_time = current_time + 70;
     }
-    btns_last_time = current_time + 170;
     btns_last = btns;
   } else if(btns && (current_time > btns_last_time)) {
     btns_last_time = current_time + 30;
