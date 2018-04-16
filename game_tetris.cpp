@@ -88,23 +88,14 @@ static uint8_t fit_tetromino(int8_t x, int8_t y, uint16_t item) {
   return draw_tetromino(x, y, item, 2);
 }
 
-static void line_down(uint8_t y) {
-  if (!y) return;
-  data->screen[y] = data->screen[y - 1];
-}
-
-static uint8_t line_at(uint8_t y) {
-  return data->screen[y] == 0b111111111111;;
-}
-
 static void remove_lines() {
   uint8_t lines_removed = 0;
   const uint16_t lines_points[5] = {0, 40, 100, 300, 1200};
   for (uint8_t i = 2; i < 23; i++) {
-    if (!line_at(i)) continue;
+    if (data->screen[i] != 0b111111111111) continue;
     lines_removed++;
     for (uint8_t j = i; j > 0; j--) {
-      line_down(j);
+      data->screen[j] = data->screen[j - 1];
     }
   }
   data->score += lines_points[lines_removed] * data->level;
@@ -175,8 +166,6 @@ static void game_on() {
   for (;;) {
     uint8_t current_key = buttonsUpdate();
 
-    display_board();
-
     if (current_key) {
       if (current_key == BTN_GO_B) {
         return;
@@ -196,6 +185,7 @@ static void game_on() {
         dr = data->tet_now_rot;
       }
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
+      display_board();
       continue;
     }
 
@@ -217,6 +207,7 @@ static void game_on() {
         next_tetromino();
       }
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
+      display_board();
     }
   } // for(;;)
 
