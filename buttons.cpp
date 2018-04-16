@@ -53,19 +53,23 @@ uint8_t buttonsUpdate(void) {
   static uint8_t btns_last = 0;
   static unsigned long btns_last_time = 0;
   unsigned long current_time = millis();
-  uint8_t ret_btns = 0;
-  uint8_t btns = buttonsRead();
-  if (btns_last != btns) {
-    if ((!btns_last && btns) || (current_time > btns_last_time)) {
-      ret_btns = btns;
-      btns_last_time = current_time + 170;
+  uint8_t ret_btns = 0, btns = buttonsRead();
+
+  // Simple debounce
+  if (current_time > btns_last_time) {
+    // Press or release
+    if (btns_last != btns) {
+      // First press
+      if (!btns_last && btns) {
+        btns_last_time = current_time + 250;
+      }
+      btns_last = btns;
     } else {
-      btns_last_time = current_time + 70;
+      btns_last_time = current_time + 60;
     }
-    btns_last = btns;
-  } else if(btns && (current_time > btns_last_time)) {
-    btns_last_time = current_time + 30;
-    ret_btns = btns;
+    ret_btns = btns_last;
+  } else {
+    ret_btns = 0;
   }
   return ret_btns;
 }
