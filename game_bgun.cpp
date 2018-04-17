@@ -162,16 +162,16 @@ static void game_on(void) {
     current_time = millis();
     btns = buttonsUpdate();
 
-    switch (btns) {
-      case BTN_GO_B: return;
+    if (buttonIs(btns, BTN_GO_UP | BTN_GO_B)) {
+      return;
     }
-    if (btns & BTN_GO_LEFT) {
+    if (buttonIs(btns, BTN_GO_LEFT)) {
       constrainedMove(&data->gunPos, -1, 0, 9);
     }
-    if (btns & BTN_GO_RIGHT) {
+    if (buttonIs(btns, BTN_GO_RIGHT)) {
       constrainedMove(&data->gunPos, 1, 0, 9);
     }
-    if (btns & (BTN_GO_UP | BTN_GO_A )) {
+    if (buttonIs(btns, BTN_GO_A)) {
       fireBullet();
     }
 

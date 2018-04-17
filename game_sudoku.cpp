@@ -1,7 +1,6 @@
 #include "game_sudoku.h"
 #define GAMES_FILE "SUDEAS.TXT"
 #define BOARD_SIZE 81
-#define UNDO_STEPS 64
 
 static U8G2 *gr;
 static UINT nr;
@@ -11,16 +10,12 @@ struct data_t {
   uint8_t gameOn;
   uint8_t level;
   char screen[BOARD_SIZE];
-  char undoValue[UNDO_STEPS];
-  char undoPosition[UNDO_STEPS];
-  uint8_t undoLast;
-  uint8_t undoCurrent;
   uint8_t cursor;
 };
 
 static struct data_t *data;
 
-static const char kb_data[] = "123456789{}|";
+static const char kb_data[] = "123456789{X|";
 static uint8_t kb_cursor, kb_show, cursor, cursor_mx, cursor_my, check;
 
 static char solution[BOARD_SIZE];
@@ -124,10 +119,6 @@ static void game_on() {
             // Set digit
             if(data->screen[data->cursor] == '0' && kb_cursor < 9) {
               data->screen[data->cursor] = kb_data[kb_cursor];
-              data->undoValue[data->undoCurrent] = kb_data[kb_cursor];
-              data->undoPosition[data->undoCurrent] = data->cursor;
-              data->undoCurrent++;
-              data->undoLast = data->undoCurrent;
 
               // Check if solved
               if(!memcmp(data->screen, solution, BOARD_SIZE)) {
@@ -137,22 +128,19 @@ static void game_on() {
               check = 1;
             }
 
+            // Check
             if(kb_data[kb_cursor] == '|') {
               check = 1;
             }
 
-            // Undo
-            if(kb_data[kb_cursor] == '{' && data->undoCurrent > 0) {
-              data->undoCurrent--;
-              data->cursor = data->undoPosition[data->undoCurrent];
-              data->screen[data->cursor] = '0';
+            // Exit
+            if(kb_data[kb_cursor] == '{') {
+              return;
             }
 
-            // Redo
-            if(kb_data[kb_cursor] == '}' && data->undoCurrent < data->undoLast) {
-              data->cursor = data->undoPosition[data->undoCurrent];
-              data->screen[data->cursor] = data->undoValue[data->undoCurrent];
-              data->undoCurrent++;
+            // Clear
+            if(kb_data[kb_cursor] == 'X') {
+              data->screen[data->cursor] = '0';
             }
 
             hide_kb();
@@ -181,8 +169,6 @@ static void game_on() {
 static void game_new(void) {
   data->gameOn = 1;
   data->cursor = 40;
-  data->undoLast = 0;
-  data->undoCurrent = 0;
   data->level++;
 
   if (!pf_open(GAMES_FILE)) {

@@ -75,7 +75,7 @@ uint8_t contrast = 127;
 //U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);     // Nokia 5110 Display
 //U8G2_PCD8544_84X48_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);     // Nokia 5110 Display
 U8G2_SH1106_128X64_NONAME_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
-//U8G2_ST7567_JLX12864_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);
+//U8G2_ST7567_JLX12864_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
 //uint8_t contrast = 110;
 
 const uint8_t game_data_sz = 240;
@@ -144,6 +144,7 @@ void setup() {
     if (pf_mount(&fs)) {
       u8g2.firstPage();
       do {
+        u8g2.drawFrame(0, 0, u8g2.getWidth(), u8g2.getHeight());
         u8g2.setCursor(2, fh + 1);
         u8g2.print(F("SD gPEsKA"));
       } while (u8g2.nextPage());
@@ -233,7 +234,7 @@ void loop() {
           u8g2.setCursor(2, 11);
           u8g2.print(F(">-CTAPT"));
           u8g2.setCursor(2, 21);
-          u8g2.print(F("<-izXOd"));
+          u8g2.print(F("^-izXOd"));
           if (game_on) {
             u8g2.setCursor(2, 31);
             u8g2.print(F("\\-pPOdalvi"));
@@ -253,7 +254,7 @@ void loop() {
         case BTN_GO_RIGHT:
           menu = MENU_NEW; goto end_menu;
         case BTN_GO_B:
-        case BTN_GO_LEFT:
+        case BTN_GO_UP:
           menu = MENU_EXIT; goto end_menu;
         case BTN_GO_DOWN:
           if (game_on) {

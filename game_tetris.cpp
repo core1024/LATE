@@ -167,13 +167,13 @@ static void game_on() {
     uint8_t current_key = buttonsUpdate();
 
     if (current_key) {
-      if (current_key == BTN_GO_B) {
+      if (buttonIs(current_key, BTN_GO_UP | BTN_GO_B)) {
         return;
       }
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 0);
       dx = data->tx + (buttonIs(current_key, BTN_GO_RIGHT) - buttonIs(current_key, BTN_GO_LEFT));
       dy = data->ty + buttonIs(current_key, BTN_GO_DOWN);
-      dr = (data->tet_now_rot + buttonIs(current_key, BTN_GO_A | BTN_GO_UP)) % 4;
+      dr = (data->tet_now_rot + buttonIs(current_key, BTN_GO_A)) % 4;
 
       if (fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
         data->tx = dx;

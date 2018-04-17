@@ -128,23 +128,23 @@ static void game_on(void) {
     btns = buttonsUpdate();
 
     if (btns) {
-      if (btns & BTN_GO_B) {
+      if (buttonIs(btns, BTN_GO_A | BTN_GO_B)) {
         return;
       }
-      if (btns & BTN_GO_LEFT && data->go.x != 1) {
+      if (buttonIs(btns, BTN_GO_LEFT) && data->go.x != 1) {
         data->go.y = 0;
         data->go.x = 9;
       }
-      if (btns & BTN_GO_RIGHT && data->go.x != 9) {
+      if (buttonIs(btns, BTN_GO_RIGHT) && data->go.x != 9) {
         data->go.y = 0;
         data->go.x = 1;
       }
 
-      if (btns & BTN_GO_UP && data->go.y != 1) {
+      if (buttonIs(btns, BTN_GO_UP) && data->go.y != 1) {
         data->go.x = 0;
         data->go.y = 19;
       }
-      if (btns & BTN_GO_DOWN && data->go.y != 19) {
+      if (buttonIs(btns, BTN_GO_DOWN) && data->go.y != 19) {
         data->go.x = 0;
         data->go.y = 1;
       }
