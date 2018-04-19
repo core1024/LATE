@@ -10,6 +10,7 @@ struct data_t {
   uint8_t gameOn;
   uint8_t level;
   char screen[BOARD_SIZE];
+  char given[BOARD_SIZE];
   uint8_t cursor;
 };
 
@@ -139,7 +140,7 @@ static void game_on() {
             }
 
             // Clear
-            if(kb_data[kb_cursor] == 'X') {
+            if(kb_data[kb_cursor] == 'X' && data->given[data->cursor] == '0') {
               data->screen[data->cursor] = '0';
             }
 
@@ -175,6 +176,7 @@ static void game_new(void) {
     do {
       pf_lseek(data->level * (BOARD_SIZE + BOARD_SIZE + 2));
       pf_read(data->screen, sizeof(data->screen), &nr);
+      memcpy(data->given, data->screen, sizeof(data->screen));
       if(nr == sizeof(data->screen)) {
         break;
       }
