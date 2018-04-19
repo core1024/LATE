@@ -72,7 +72,6 @@ struct game_t {
 };
 
 uint8_t contrast = 127;
-//U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);     // Nokia 5110 Display
 //U8G2_PCD8544_84X48_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);     // Nokia 5110 Display
 U8G2_SH1106_128X64_NONAME_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
 //U8G2_ST7567_JLX12864_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
