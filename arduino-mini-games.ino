@@ -71,11 +71,11 @@ struct game_t {
   void (*play)(U8G2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore);
 };
 
-uint8_t contrast = 127;
+//uint8_t contrast = 127;
 //U8G2_PCD8544_84X48_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A1, /* dc=*/ A2, /* reset=*/ A0);     // Nokia 5110 Display
-U8G2_SH1106_128X64_NONAME_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
-//U8G2_ST7567_JLX12864_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
-//uint8_t contrast = 110;
+//U8G2_SH1106_128X64_NONAME_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
+U8G2_ST7567_JLX12864_2_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ A0, /* dc=*/ A1, /* reset=*/ A2);
+uint8_t contrast = 110;
 
 const uint8_t game_data_sz = 240;
 uint8_t game_data[game_data_sz];
@@ -185,6 +185,9 @@ void loop() {
         break;
       case BTN_GO_DOWN:
         choice = (games_count + choice + 1) % games_count;
+        break;
+      case BTN_GO_LEFT:
+        digitalWrite(10, !digitalRead(10));
         break;
       case BTN_GO_RIGHT:
       case BTN_GO_A:
