@@ -1,12 +1,12 @@
 #include "block.h"
 static uint8_t blockSide, blockGap, blockWithGap;
-static U8G2 *gr;
+static Arduboy2 *gr;
 
 // Calculate block size and set a gap between blocks if there's enough space
-void blocksSetup(U8G2 *sgr) {
+void blocksSetup(Arduboy2 *sgr) {
   gr = sgr;
   blockGap = 0;
-  blockSide = floor((gr->getHeight() - BLOCK_LINE) / 21);
+  blockSide = floor((HEIGHT) / 20);
   if (blockSide > 2) {
     blockSide--;
     blockGap++;
@@ -21,11 +21,11 @@ uint8_t blockScale(int8_t i) {
 }
 
 void blockDraw(int8_t x, int8_t y) {
-  gr->drawBox(blockScale(x), blockScale(y) + BLOCK_LINE, blockSide, blockSide);
+  gr->drawRect(blockScale(x) + (WIDTH - blockScale(10) - 1), blockScale(y), blockSide, blockSide);
 }
 
 // Board frame 10x20
 void blockDrawFrame(void) {
-  gr->drawFrame(0, BLOCK_LINE, blockScale(10) + 1, blockScale(20) + 1);
+  gr->drawRect(WIDTH - blockScale(10) - 1, 0, blockScale(10) + 1, blockScale(20) + 1);
 }
 

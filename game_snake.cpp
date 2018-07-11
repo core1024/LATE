@@ -4,7 +4,7 @@
 #define MAX_TAIL_LENGTH 20
 #define MIN_TAIL_LENGTH 4
 
-static U8G2 *gr;
+static Arduboy2 *gr;
 
 struct point_t {
   int8_t x;
@@ -108,18 +108,17 @@ static void game_frame(void) {
 
 static void game_draw(void) {
   char strnum[12];
-  gr->firstPage();
-  do {
-    gr->setCursor(0, 0);
-    gr->print(F("zMiq"));
-    gr->setFontDirection(1);
-    ltoa(data->score, strnum, 10);
-    gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);
-    gr->setFontDirection(0);
-    blockDrawFrame();
-    drawTarget();
-    drawTail(NULL);
-  } while (gr->nextPage());
+  if (!(gr->nextFrame())) return;
+  gr->clear();
+  gr->setCursor(0, 0);
+  gr->print(F("SNAKE"));
+  ltoa(data->score, strnum, 10);
+  gr->setCursor(blockScale(10) + 6, BLOCK_LINE + 1);
+  gr->print(strnum);
+  blockDrawFrame();
+  drawTarget();
+  drawTail(NULL);
+  gr->display();
 }
 
 static void game_on(void) {
@@ -157,7 +156,7 @@ static void game_on(void) {
   } // hwile game on
 }
 
-void gameSnake(U8G2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
+void gameSnake(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
   gr = sgr;
   data = (struct data_t *)gdat;
 
