@@ -1,0 +1,1 @@
+bdfconv.exe -b 2 -f 1 -m "48-58" -o u8g2_font_sseg_w10_tnc.c -n u8g2_font_sseg_w10_tnc u8g2_font_sseg_w10_tnc.bdf
