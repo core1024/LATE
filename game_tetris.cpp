@@ -131,44 +131,81 @@ static void next_tetromino() {
 static void display_board() {
   char strnum[12];
   gr->clear();
-  // const uint8_t next[4] = {
-  //   (const uint8_t)(tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111),
-  //   (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 4) & 0b1111),
-  //   (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 8) & 0b1111),
-  //   (const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 12) & 0b1111)
-  // };
-  // gr->drawSlowXYBitmap(50, 0, next, 4, 4, WHITE);
-  gr->setCursor(0, 0);
-  gr->print(F("TETRIS"));
+  // gr->paint8Pixels((const uint8_t)(tetrominoes[data->tet_next_sel][data->tet_next_rot] & 0b1111));
+  // gr->paint8Pixels((const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 4) & 0b1111));
+  // gr->paint8Pixels((const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 8) & 0b1111));
+  // gr->paint8Pixels((const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 12) & 0b1111));
 
-  blockDrawFrame();
+  //blockDrawFrame();
+  
   ltoa(data->score, strnum, 10);
-  gr->setCursor(0, 16);
+  gr->setCursor(80, 0);
   gr->print(F("SCORE"));
-  gr->setCursor(50, 16);
+  gr->setCursor(80, 8);
   gr->print(strnum);
   ltoa(data->lines, strnum, 10);
-  gr->setCursor(0, 32);
+  gr->setCursor(80, 20);
   gr->print(F("LINES"));
-  gr->setCursor(50, 32);
+  gr->setCursor(80, 28);
   gr->print(strnum);
   ltoa(data->level, strnum, 10);
-  gr->setCursor(0, 48);
+  gr->setCursor(80, 40);
   gr->print(F("LEVEL"));
-  gr->setCursor(50, 48);
+  gr->setCursor(80, 48);
   gr->print(strnum);
 
+  // Bottom wall
+  gr->drawPixel(34, 61);
+  gr->drawPixel(35, 63);
+
+  // Board
   for (int x = 1; x <= 10; x++) {
+    int x3 = x * 3;
+    // Bottom wall
+    gr->drawPixel(x3 + 0, 61);
+    gr->drawPixel(x3 + 1, 61);
+    gr->drawPixel(x3 + 3, 61);
+    gr->drawPixel(x3 + 0, 63);
+    gr->drawPixel(x3 + 2, 63);
+    gr->drawPixel(x3 + 3, 63);
+
     for (int y = 0; y < 20; y++) {
       if (get_pixel(x, y + BOARD_LINES - 21)) {
-        blockDraw(x - 1, y);
+        gr->drawRect(x3 + 2, 3 * y, 3, 3);
+      } else {
+        gr->drawPixel(x3 + 3, 3 * y + 1);
       }
     }
   }
+
   for (int i = 0; i < 16; i++) {
-    //if(bitRead(tetrominoes[data->tet_next_sel][data->tet_next_rot], i)) {
-      blockDraw((i % 4), (i / 4));
-    //}
+    int v = i * 4 + 1;
+
+    // Left wall
+    gr->drawPixel(0, v);
+    gr->drawPixel(1, v);
+    gr->drawPixel(3, v);
+
+    // Rigth wall
+    gr->drawPixel(36, v);
+    gr->drawPixel(37, v);
+    gr->drawPixel(39, v);
+
+    v += 2;
+    // Left wall
+    gr->drawPixel(0, v);
+    gr->drawPixel(2, v);
+    gr->drawPixel(3, v);
+
+    // Rigth wall
+    gr->drawPixel(36, v);
+    gr->drawPixel(38, v);
+    gr->drawPixel(39, v);
+
+    // Next
+    if(bitRead(tetrominoes[data->tet_next_sel][data->tet_next_rot], i)) {
+      gr->drawRect(3 * ((i % 4)) + 42, 3 * (i / 4) + 52, 2, 2);
+    }
   }
   gr->display();
 }
@@ -182,7 +219,7 @@ static void game_on() {
 
     uint8_t current_key = buttonsUpdate();
 
-    if (gr->justPressed(A_BUTTON)) {
+    if (gr->justPressed(B_BUTTON)) {
       return;
     }
 
@@ -203,7 +240,7 @@ static void game_on() {
     }
 
     dy = data->ty + gr->pressed(DOWN_BUTTON);
-    dr = (data->tet_now_rot + (gr->justPressed(UP_BUTTON) || gr->justPressed(B_BUTTON))) % 4;
+    dr = (data->tet_now_rot + (gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON))) % 4;
 
     if (fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
       data->tx = dx;
