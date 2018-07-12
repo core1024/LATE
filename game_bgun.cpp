@@ -3,7 +3,7 @@
 // Game related
 #define BULLETS_COUNT 5
 
-static U8G2 *gr;
+static Arduboy2 *gr;
 
 struct data_t {
   uint8_t gameOn;
@@ -159,6 +159,7 @@ static void game_new(void) {
 
 static void game_on(void) {
   for (;;) {
+    if (!(gr->nextFrame())) continue;
     current_time = millis();
     btns = buttonsUpdate();
 
@@ -196,24 +197,22 @@ static void game_on(void) {
       return;
     }
 
-    gr->firstPage();
-    do {
-      gr->setCursor(0, 0);
-      gr->print(F("CTPElbA"));
-      char strnum[12];
-      blockDrawFrame();
-      drawGun();
-      drawTarget();
-      drawBullets();
-      gr->setFontDirection(1);
-      ltoa(data->score, strnum, 10);
-      gr->setFontDirection(0);
-      gr->drawStr(blockScale(10) + 6, BLOCK_LINE + 1, strnum);
-    } while (gr->nextPage());
+    gr->clear();
+    gr->setCursor(0, 0);
+    gr->print(F("BGUN"));
+    char strnum[12];
+    blockDrawFrame();
+    drawGun();
+    drawTarget();
+    drawBullets();
+    ltoa(data->score, strnum, 10);
+    gr->setCursor(blockScale(10) + 6, BLOCK_LINE + 1);
+    gr->print(strnum);
+    gr->display();
   } // for(;;)
 }
 
-void gameBGun(U8G2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
+void gameBGun(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
   gr = sgr;
   data = (struct data_t *)gdat;
 

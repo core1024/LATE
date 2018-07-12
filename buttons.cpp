@@ -9,7 +9,7 @@
 #define BTN_GO_DIR_LEFT BTN_GO_DIR(7)
 
 
-static uint8_t btnRot = 0, btnPinA, btnPinRight, btnPinLeft, btnPinUp, btnPinDown, btnPinB, btnPinC;
+static uint8_t btnRot = 0;
 static const uint8_t btnDir[] = {
   BTN_GO_UP,
   BTN_GO_RIGHT,
@@ -17,43 +17,17 @@ static const uint8_t btnDir[] = {
   BTN_GO_LEFT
 };
 
-void buttonsSetup(const uint8_t setRot, const uint8_t pinA, const uint8_t pinRight, const uint8_t pinLeft, const uint8_t pinUp, const uint8_t pinDown, const uint8_t pinB, const uint8_t pinC) {
-  btnRot = setRot;
-  btnPinA = pinA;
-  btnPinRight = pinRight;
-  btnPinLeft = pinLeft;
-  btnPinUp = pinUp;
-  btnPinDown = pinDown;
-  btnPinB = pinB;
-  btnPinC = pinC;
-  pinMode(btnPinA, INPUT_PULLUP);
-  pinMode(btnPinRight, INPUT_PULLUP);
-  pinMode(btnPinLeft, INPUT_PULLUP);
-  pinMode(btnPinUp, INPUT_PULLUP);
-  pinMode(btnPinDown, INPUT_PULLUP);
-  pinMode(btnPinB, INPUT_PULLUP);
-  pinMode(btnPinC, INPUT_PULLUP);
-}
+static Arduboy2 *arduboy;
 
-void buttonsRotate(uint8_t setRot) {
-  btnRot = setRot;
-}
-
-uint8_t buttonsRead(void) {
-  return GET_BTN(btnPinA, BTN_GO_A) |
-         GET_BTN(btnPinUp, BTN_GO_DIR_UP) |
-         GET_BTN(btnPinRight, BTN_GO_DIR_RIGHT) |
-         GET_BTN(btnPinDown, BTN_GO_DIR_DOWN) |
-         GET_BTN(btnPinLeft, BTN_GO_DIR_LEFT) |
-         GET_BTN(btnPinB, BTN_GO_B) |
-         GET_BTN(btnPinC, BTN_GO_C);
+void buttonsSetup(Arduboy2 *ab) {
+  arduboy = ab;
 }
 
 uint8_t buttonsUpdate(void) {
   static uint8_t btns_last = 0;
   static unsigned long btns_last_time = 0;
   unsigned long current_time = millis();
-  uint8_t ret_btns = 0, btns = buttonsRead();
+  uint8_t ret_btns = 0, btns = arduboy->buttonsState();
 
   // Simple debounce
   if (current_time > btns_last_time) {
@@ -61,7 +35,7 @@ uint8_t buttonsUpdate(void) {
     if (btns_last != btns) {
       // First press
       if (!btns_last && btns) {
-        btns_last_time = current_time + 250;
+        btns_last_time = current_time + 300;
       }
       btns_last = btns;
     } else {
