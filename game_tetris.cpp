@@ -26,7 +26,7 @@ struct data_t {
 
 static struct data_t *data;
 
-static int8_t dx, dy, dr;
+static int8_t dx, dy, dr, stopDrop;
 
 static unsigned long button_wait_time;
 
@@ -136,31 +136,68 @@ static void display_board() {
   // gr->paint8Pixels((const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 8) & 0b1111));
   // gr->paint8Pixels((const uint8_t)((tetrominoes[data->tet_next_sel][data->tet_next_rot] >> 12) & 0b1111));
 
-  //blockDrawFrame();
+  //Score rounded rect
+  gr->drawRoundRect(63, 0, 46, 13, 3);
+  gr->fillRoundRect(65, 2, 42, 9, 1);
+  gr->drawFastHLine(44, 7, 19);
+  gr->drawFastHLine(109, 7, 19);
+
+  // The score square
+  gr->drawFastHLine(44, 15, 84);
+  gr->fillRect(44, 17, 84, 9);
+  gr->drawFastHLine(44, 27, 84);
+
+  gr->setTextBackground(WHITE);
+  gr->setTextColor(BLACK);
   
-  ltoa(data->score, strnum, 10);
-  gr->setCursor(80, 0);
+  snprintf(strnum, 11, "%10d", data->score);
+  gr->setCursor(72, 3);
   gr->print(F("SCORE"));
-  gr->setCursor(80, 8);
-  gr->print(strnum);
-  ltoa(data->lines, strnum, 10);
-  gr->setCursor(80, 20);
-  gr->print(F("LINES"));
-  gr->setCursor(80, 28);
-  gr->print(strnum);
-  ltoa(data->level, strnum, 10);
-  gr->setCursor(80, 40);
-  gr->print(F("LEVEL"));
-  gr->setCursor(80, 48);
+
+  gr->setCursor(66, 18);
   gr->print(strnum);
 
+  //Level rounded rect
+  gr->drawRoundRect(66, 34, 62, 13, 3);
+  gr->fillRoundRect(68, 36, 58, 9, 1);
+
+  snprintf(strnum, 11, "%4d", data->level);
+  gr->setCursor(70, 37);
+  gr->print(F("LEVEL"));
+  gr->setCursor(102, 37);
+  gr->print(strnum);
+
+  // Lines rounded rect
+  gr->drawRoundRect(66, 51, 62, 13, 3);
+  gr->fillRoundRect(68, 53, 58, 9, 1);
+
+  snprintf(strnum, 11, "%4d", data->lines);
+  gr->setCursor(70, 54);
+  gr->print(F("LINES"));
+  gr->setCursor(102, 54);
+  gr->print(strnum);
+
+  // End text
+  gr->setTextBackground(BLACK);
+  gr->setTextColor(WHITE);
+
+  // Next rounded rect
+  gr->fillRect(48, 42, 13, 13);
+  gr->drawRoundRect(46, 40, 17, 17, 2);
+
+  // Vertical lines arround the board
+  gr->drawFastVLine(0, 0, 64);
+  gr->drawFastVLine(1, 0, 64);
+  gr->drawFastVLine(42, 0, 64);
+  gr->drawFastVLine(43, 0, 64);
+
   // Bottom wall
-  gr->drawPixel(34, 61);
-  gr->drawPixel(35, 63);
+  gr->drawPixel(36, 61);
+  gr->drawPixel(37, 63);
 
   // Board
   for (int x = 1; x <= 10; x++) {
-    int x3 = x * 3;
+    int x3 = x * 3 + 2;
     // Bottom wall
     gr->drawPixel(x3 + 0, 61);
     gr->drawPixel(x3 + 1, 61);
@@ -182,29 +219,29 @@ static void display_board() {
     int v = i * 4 + 1;
 
     // Left wall
-    gr->drawPixel(0, v);
-    gr->drawPixel(1, v);
+    gr->drawPixel(2, v);
     gr->drawPixel(3, v);
+    gr->drawPixel(5, v);
 
     // Rigth wall
-    gr->drawPixel(36, v);
-    gr->drawPixel(37, v);
+    gr->drawPixel(38, v);
     gr->drawPixel(39, v);
+    gr->drawPixel(41, v);
 
     v += 2;
     // Left wall
-    gr->drawPixel(0, v);
     gr->drawPixel(2, v);
-    gr->drawPixel(3, v);
+    gr->drawPixel(4, v);
+    gr->drawPixel(5, v);
 
     // Rigth wall
-    gr->drawPixel(36, v);
     gr->drawPixel(38, v);
-    gr->drawPixel(39, v);
+    gr->drawPixel(40, v);
+    gr->drawPixel(41, v);
 
     // Next
     if(bitRead(tetrominoes[data->tet_next_sel][data->tet_next_rot], i)) {
-      gr->drawRect(3 * ((i % 4)) + 42, 3 * (i / 4) + 52, 2, 2);
+      gr->drawRect(3 * ((i % 4)) + 49, 3 * (i / 4) + 43, 2, 2, BLACK);
     }
   }
   gr->display();
@@ -239,7 +276,11 @@ static void game_on() {
       dx = data->tx + 1;
     }
 
-    dy = data->ty + gr->pressed(DOWN_BUTTON);
+    dy = data->ty;
+    if((gr->pressed(DOWN_BUTTON) && !stopDrop) || gr->justPressed(DOWN_BUTTON)) {
+      stopDrop = 0;
+      dy += gr->pressed(DOWN_BUTTON);
+    }
     dr = (data->tet_now_rot + (gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON))) % 4;
 
     if (fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
@@ -268,6 +309,7 @@ static void game_on() {
         data->tx = 3;
         data->ty = 0;
         dx = data->tx;
+        stopDrop = 1;
         next_tetromino();
       }
       draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
