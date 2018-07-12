@@ -150,18 +150,18 @@ static void display_board() {
   gr->setTextBackground(WHITE);
   gr->setTextColor(BLACK);
   
-  snprintf(strnum, 11, "%10d", data->score);
+  //snprintf(strnum, 11, "%10ull", (unsigned long long)data->score);
   gr->setCursor(72, 3);
   gr->print(F("SCORE"));
 
   gr->setCursor(66, 18);
-  gr->print(strnum);
+  gr->print(data->score);
 
   //Level rounded rect
   gr->drawRoundRect(66, 34, 62, 13, 3);
   gr->fillRoundRect(68, 36, 58, 9, 1);
 
-  snprintf(strnum, 11, "%4d", data->level);
+  snprintf(strnum, 11, "%4u", data->level);
   gr->setCursor(70, 37);
   gr->print(F("LEVEL"));
   gr->setCursor(102, 37);
@@ -171,7 +171,7 @@ static void display_board() {
   gr->drawRoundRect(66, 51, 62, 13, 3);
   gr->fillRoundRect(68, 53, 58, 9, 1);
 
-  snprintf(strnum, 11, "%4d", data->lines);
+  snprintf(strnum, 11, "%4u", data->lines);
   gr->setCursor(70, 54);
   gr->print(F("LINES"));
   gr->setCursor(102, 54);
