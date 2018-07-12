@@ -31,8 +31,6 @@ uint8_t game_data[game_data_sz];
 const uint8_t games_count = 3;
 struct game_t games[games_count];
 
-uint8_t rot = 1;
-
 uint8_t choice = 0;
 
 uint8_t fh;
