@@ -1,1 +1,0 @@
-bdfconv.exe -b 2 -f 1 -m "32-125" -o vladofont.c -n vladofont vladofont.bdf
