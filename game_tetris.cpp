@@ -308,8 +308,6 @@ static void game_on() {
     }
     gr->pollButtons();
 
-    uint8_t current_key = buttonsUpdate();
-
     if (gr->justPressed(B_BUTTON)) {
       return;
     }
