@@ -392,20 +392,20 @@ static void game_on() {
   } // for(;;)
 
   // END screen
-  reset_board();
-  draw_tetromino(3, 3, 0b0010011000101111, 1);
-  draw_tetromino(3, 7, 0b1001100100001111, 1);
-  draw_tetromino(3, 11, 0b0000100111011011, 1);
-  draw_tetromino(3, 15, 0b1010101010100111, 1);
-  draw_tetromino(3, 19, 0b0000000000000111, 1);
-  display_board();
-  gr->display();
-  while(! gr->justPressed(A_BUTTON)) {
-    if (gr->nextFrame()) {
-      gr->pollButtons();
-    }
-    gr->idle();
-  }
+  // reset_board();
+  // draw_tetromino(3, 3, 0b0010011000101111, 1);
+  // draw_tetromino(3, 7, 0b1001100100001111, 1);
+  // draw_tetromino(3, 11, 0b0000100111011011, 1);
+  // draw_tetromino(3, 15, 0b1010101010100111, 1);
+  // draw_tetromino(3, 19, 0b0000000000000111, 1);
+  // display_board();
+  // gr->display();
+  // while(! gr->justPressed(A_BUTTON)) {
+  //   if (gr->nextFrame()) {
+  //     gr->pollButtons();
+  //   }
+  //   gr->idle();
+  // }
 }
 
 static void game_new(void) {
@@ -430,10 +430,6 @@ static void game_new(void) {
 void gameTetris(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
   gr = sgr;
   data = (struct data_t *)gdat;
-
-  if (!data->gameOn) {
-    data->score = 0;
-  }
 
   if (menu == MENU_NEW) {
     game_new();
