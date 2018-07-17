@@ -501,13 +501,17 @@ static void place_tile(void) {
 	data->y = 18;
 
 	display_next();
+	display_board();
+	set_tile(data->x, data->y, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, display_current_square);
+	gr->display();
+
 	for (;;) {
 		if (!gr->nextFrame()) {
 			continue;
 		}
 		gr->pollButtons();
 		set_tile(data->x, data->y, tiles[data->next[data->current] & ~NEXT_BUSY], BLACK, display_current_square);
-		display_board();
+		// display_board();
 
 		if (gr->justPressed(B_BUTTON)) {
 			data->next[data->current] &= ~NEXT_BUSY;
@@ -525,8 +529,6 @@ static void place_tile(void) {
 			return;
 		}
 
-		dx = 0;
-		dy = 0;
 		if((gr->pressed(LEFT_BUTTON) ||
 			gr->pressed(RIGHT_BUTTON) ||
 			gr->pressed(UP_BUTTON) ||
@@ -540,15 +542,15 @@ static void place_tile(void) {
 			}
 			dx = (gr->pressed(RIGHT_BUTTON) - gr->pressed(LEFT_BUTTON)) * 6;
 			dy = (gr->pressed(DOWN_BUTTON) - gr->pressed(UP_BUTTON)) * 6;
+			if(set_tile(data->x + dx, data->y + dy, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, check_current_square)) {
+				data->x += dx;
+				data->y += dy;
+				display_board();
+				set_tile(data->x, data->y, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, display_current_square);
+				gr->display();
+			}
 		}
 
-		if(set_tile(data->x + dx, data->y + dy, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, check_current_square)) {
-			data->x += dx;
-			data->y += dy;
-		}
-
-		set_tile(data->x, data->y, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, display_current_square);
-		gr->display();
 		gr->idle();
 	}
 }
@@ -580,6 +582,7 @@ static void game_on(void) {
 		if(pick_tile()) {
 			return;
 		}
+
 		place_tile();
 		remove_lines();
 	}
