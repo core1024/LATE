@@ -38,6 +38,8 @@ struct data_t {
 
 static struct data_t *data;
 
+static unsigned long button_wait_time = 0;;
+
 #define NUM_TILES 19
 static const uint8_t tiles[NUM_TILES][5] = {
 	// Test case all set
@@ -202,6 +204,17 @@ static const uint8_t tiles[NUM_TILES][5] = {
 	}
 };
 
+const uint8_t cupImg[] PROGMEM = {
+	0b00000110,
+	0b01001001,
+	0b01011111,
+	0b01111111,
+	0b01111111,
+	0b01011111,
+	0b01001001,
+	0b00000110
+};
+
 static uint8_t get_pixel(int8_t ox, int8_t oy, int8_t x, int8_t y, uint8_t color, uint8_t mask) {
 	return bitRead(data->screen[oy + y], ox + x) == color;
 } // end of get_pixel
@@ -230,17 +243,6 @@ static uint8_t set_tile(int8_t x, int8_t y, uint8_t item[5], uint8_t color, uint
 	}
 	return 1;
 }
-
-const uint8_t cupImg[] PROGMEM = {
-	0b00000110,
-	0b01001001,
-	0b01011111,
-	0b01111111,
-	0b01111111,
-	0b01011111,
-	0b01001001,
-	0b00000110
-};
 
 static void display_square(uint8_t x, uint8_t y, uint8_t w, uint8_t mask, uint8_t color, uint8_t fill) {
 	uint8_t rmask = ~mask;
@@ -325,9 +327,9 @@ static void display_board(void) {
 	gr->setCursor(102, 1);
 	gr->print(data->hiScore);
 
-	for (int x = 0; x < 10; x++) {
+	for (int x = 0; x < BOARD_LINES; x++) {
 		int sx = x * 6 + 2;
-		for (int y = 0; y < 10; y++) {
+		for (int y = 0; y < BOARD_LINES; y++) {
 			int sy = y * 6 + 2;
 			if (get_pixel(0, 0, x, y, 1, 0)) {
 				display_square(sx, sy, 5, 0, WHITE, FILL_EMPTY);
@@ -344,20 +346,20 @@ static void remove_lines(void) {
 	uint8_t vlines[5];
 	uint8_t vline = 0;
 	uint8_t vcount;
-	for (x = 0; x < 10; x++) {
+	for (x = 0; x < BOARD_LINES; x++) {
 		vcount = 0;
-		for (y = 0; y < 10; y++) {
+		for (y = 0; y < BOARD_LINES; y++) {
 			if (get_pixel(0, 0, x, y, WHITE, 0)) {
 				vcount++;
 			}
 		}
-		if(vcount == 10) {
+		if(vcount == BOARD_LINES) {
 			vlines[vline] = x;
 			vline++;
 			lines++;
 		}
 	}
-	for (y = 0; y < 10; y++) {
+	for (y = 0; y < BOARD_LINES; y++) {
 		if (data->screen[y] == 0b1111111111) {
 			data->screen[y] = 0;
 			data->score += 10;
@@ -365,7 +367,7 @@ static void remove_lines(void) {
 		}
 	}
 	for (x = 0; x < vline; x++) {
-		for (y = 0; y < 10; y++) {
+		for (y = 0; y < BOARD_LINES; y++) {
 			set_pixel(0, 0, vlines[x], y, BLACK, 0);
 		}
 	}
@@ -450,7 +452,47 @@ static uint8_t pick_tile(void) {
 	return 0;
 }
 
+static uint8_t next_fit(void) {
+	int8_t t, x, y, ox, oy;
+	uint8_t pass = 0;
+	for(t = 0;t < 3;t++) {
+		// Skip already placed tile
+		if(data->next[t] & NEXT_BUSY) {
+			continue;
+		}
+
+		// Locate offset Left
+		for(x = 0;x > -5;x--) {
+			if( ! set_tile(x * 6, 0, tiles[data->next[t]], WHITE, check_current_square)) {
+				ox = x + 1;
+				break;
+			}
+		}
+
+		// Locate offset top
+		for(y = 0;y > -5;y--) {
+			if( ! set_tile(0, y * 6, tiles[data->next[t]], WHITE, check_current_square)) {
+				oy = y + 1;
+				break;
+			}
+		}
+		for(x = 0;x < BOARD_LINES;x++) {
+			for(y = 0;y < BOARD_LINES;y++) {
+				if( ! set_tile((x + ox) * 6, (y + oy) * 6, tiles[data->next[t]], WHITE, check_current_square)) {
+					continue;
+				}
+				if(set_tile(x + ox, y + oy, tiles[data->next[t]], WHITE, get_pixel)) {
+					x = y = BOARD_LINES;
+					pass++;
+				}
+			}
+		}
+	}
+	return pass != 0;
+}
+
 static void place_tile(void) {
+	int8_t dx, dy;
 	if(data->current < 0 || data->current > 2) {
 		return;
 	}
@@ -483,8 +525,22 @@ static void place_tile(void) {
 			return;
 		}
 
-		int8_t dx = (gr->justPressed(RIGHT_BUTTON) - gr->justPressed(LEFT_BUTTON)) * 6;
-		int8_t dy = (gr->justPressed(DOWN_BUTTON) - gr->justPressed(UP_BUTTON)) * 6;
+		dx = 0;
+		dy = 0;
+		if((gr->pressed(LEFT_BUTTON) ||
+			gr->pressed(RIGHT_BUTTON) ||
+			gr->pressed(UP_BUTTON) ||
+			gr->pressed(DOWN_BUTTON)
+			) && (millis() - button_wait_time > 250)) {
+			if(gr->justPressed(LEFT_BUTTON) ||
+			gr->justPressed(RIGHT_BUTTON) ||
+			gr->justPressed(UP_BUTTON) ||
+			gr->justPressed(DOWN_BUTTON)) {
+				button_wait_time = millis();
+			}
+			dx = (gr->pressed(RIGHT_BUTTON) - gr->pressed(LEFT_BUTTON)) * 6;
+			dy = (gr->pressed(DOWN_BUTTON) - gr->pressed(UP_BUTTON)) * 6;
+		}
 
 		if(set_tile(data->x + dx, data->y + dy, tiles[data->next[data->current] & ~NEXT_BUSY], WHITE, check_current_square)) {
 			data->x += dx;
@@ -510,9 +566,17 @@ static void game_on(void) {
 	display_board();
 	gr->display();
 	for (;;) {
+
 		if(data->next[0] & NEXT_BUSY && data->next[1] & NEXT_BUSY && data->next[2] & NEXT_BUSY) {
 			next_random();
 		}
+
+		// Game over?
+		if( ! next_fit()) {
+			data->gameOn = 0;
+			return;
+		}
+
 		if(pick_tile()) {
 			return;
 		}
@@ -524,10 +588,6 @@ static void game_on(void) {
 void game1010(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore) {
 	gr = sgr;
 	data = (struct data_t *)gdat;
-
-	if (!data->gameOn) {
-		data->score = 0;
-	}
 
 	if (menu == MENU_NEW) {
 		game_new();
