@@ -41,7 +41,7 @@ void setup() {
   games[0].name = F("TETRIS");
   games[0].address = EEPROM_STORAGE_SPACE_START + sizeof(game_data);
   games[0].play = &gameTetris;
-  games[1].name = F("1010");
+  games[1].name = F("1010!");
   games[1].address = EEPROM_STORAGE_SPACE_START + 2 * sizeof(game_data);
   games[1].play = &game1010;
   // games[2].name = F("BGUN");
@@ -93,6 +93,7 @@ void loop() {
     if(arduboy.justPressed(A_BUTTON)) {
         game_on = 1;
     }
+    arduboy.idle();
   }
 
   arduboy.initRandomSeed();
@@ -107,6 +108,11 @@ void loop() {
 
   // Call game with MENU_EXIT to obtain scores
   (*games[choice].play)(&arduboy, game_data, MENU_EXIT, &game_on, &score, &hiScore);
+
+  if(hiScore == ~0 && game_on) {
+    memset(game_data, 0, sizeof(game_data));
+    game_on = score = hiScore = 0;
+  }
   last_score = ~0;
   do {
     arduboy.clear();
@@ -118,43 +124,79 @@ void loop() {
 
     // Game over
     if(!game_on && last_score != ~0) {
-      arduboy.setCursor(2, 12);
+      arduboy.setCursor(37, 12);
       arduboy.print(F("GAME OVER"));
 
-      // Congrats for hight score?
+      if(last_score < score) {
+        arduboy.setCursor(2, 28);
+        arduboy.print(F("CONGRATULATIONS!"));
+        arduboy.setCursor(2, 37);
+        arduboy.print(F("You score"));
+        arduboy.setCursor(2, 46);
+        arduboy.print(hiScore);
+        arduboy.print(F(" points."));
+        arduboy.setCursor(2, 55);
+        arduboy.print(F("That's a new record!"));
+      } else if(score / last_score * 100 > 75) {
+        arduboy.setCursor(20, 28);
+        arduboy.print(F("You almost beat"));
+        arduboy.setCursor(20, 37);
+        arduboy.print("the record.");
+        arduboy.setCursor(20, 46);
+        arduboy.print("Better luck");
+        arduboy.setCursor(20, 55);
+        arduboy.print("next time.");
+      } else {
+        arduboy.setCursor(2, 28);
+        arduboy.print(F("That was"));
+        arduboy.setCursor(2, 37);
+        arduboy.print("unfortunate.");
+        arduboy.setCursor(2, 46);
+        arduboy.print("Next time you will");
+        arduboy.setCursor(2, 55);
+        arduboy.print("do better.");
+      }
       arduboy.display();
       for (;;) {
         arduboy.pollButtons();
-        if(arduboy.justPressed(A_BUTTON)) {
+        if(arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
           break;
         }
+        arduboy.idle();
       }
+      arduboy.fillRect(2, 12, 124, 50, BLACK);
     }
 
     // Show the menu
+    arduboy.setCursor(2, 12);
+    arduboy.print(F("HIGH SCORE "));
+    arduboy.print(hiScore);
+
+    if (game_on) {
+      arduboy.setCursor(2, 22);
+      arduboy.print(F("GAME SCORE "));
+      arduboy.print(score);
+    }
+
+    arduboy.setCursor(2, 45);
+    arduboy.print(F("[A] - "));
+    if (game_on) {
+      arduboy.print(F("CONTINUE"));
+    } else {
+      arduboy.print(F("START"));
+    }
+    arduboy.setCursor(2, 55);
+    arduboy.print(F("[B] - EXIT GAME"));
+
+    arduboy.display();
+
+    // Handle buttons
     for (;;) {
       if (!arduboy.nextFrame()) {
         continue;
       }
       arduboy.pollButtons();
 
-      arduboy.setCursor(2, 12);
-      arduboy.print(F("[A] - "));
-      if (game_on) {
-        arduboy.print(F("CONTINUE"));
-      } else {
-        arduboy.print(F("START"));
-      }
-      arduboy.setCursor(2, 22);
-      arduboy.print(F("[B] - EXIT"));
-      arduboy.setCursor(2, 41);
-      arduboy.print(score);
-
-      arduboy.setCursor(2, 51);
-      arduboy.print(hiScore);
-      arduboy.display();
-
-      // Handle buttons
       if(arduboy.justPressed(A_BUTTON)) {
         menu = game_on && ! arduboy.pressed(LEFT_BUTTON) ? MENU_RESUME : MENU_NEW; break;
       }
@@ -162,6 +204,7 @@ void loop() {
       if(arduboy.justPressed(B_BUTTON)) {
           menu = MENU_EXIT; break;
       }
+      arduboy.idle();
     }
 
     // Start the game
