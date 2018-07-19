@@ -3,11 +3,9 @@
 #include <EEPROM.h>
 
 #include "buttons.h"
-#include "block.h"
 
 #include "game_tetris.h"
 #include "game_1010.h"
-#include "game_bgun.h"
 
 #define BTN_PIN_UP 9
 #define BTN_PIN_DOWN 6
@@ -44,13 +42,9 @@ void setup() {
   games[1].name = F("1010!");
   games[1].address = EEPROM_STORAGE_SPACE_START + 2 * sizeof(game_data);
   games[1].play = &game1010;
-  // games[2].name = F("BGUN");
-  // games[2].address = EEPROM_STORAGE_SPACE_START;
-  // games[2].play = &gameBGun;
 
   arduboy.begin();
   arduboy.setFrameRate(30);
-  blocksSetup(&arduboy);
   buttonsSetup(&arduboy);
 
   fh = 8;
