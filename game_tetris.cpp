@@ -1,5 +1,10 @@
 #include "game_tetris.h"
 
+#define LOCK_TIME 15
+#define TET_HIT_BOTTOM 1
+#define TET_STOP_DROP 2
+#define TET_MOVED 4
+
 #define NEXT_TET_X 4
 #define NEXT_TET_Y 0
 #define BOARD_LINES 24
@@ -298,9 +303,8 @@ static void display_stats() {
 
 static void game_on() {
   // TODO: use single var and bitmask
-  uint8_t allowDrop = 1;
-  uint8_t stopDrop = 0;
-  uint8_t hitBottm = 0;
+  uint16_t lockAfterXFrames = gr->frameCount + LOCK_TIME;
+  uint8_t tetState = 0;
   display_background();
   display_stats();
 
@@ -314,11 +318,14 @@ static void game_on() {
       return;
     }
 
+    tetState &= ~TET_MOVED;
+
     if(gr->pressed(LEFT_BUTTON) && (millis() - button_wait_time > 250)) {
       if(gr->justPressed(LEFT_BUTTON)) {
         button_wait_time = millis();
       }
       dx = data->tx - 1;
+      tetState |= TET_MOVED;
     }
 
     if(gr->pressed(RIGHT_BUTTON) && (millis() - button_wait_time > 250)) {
@@ -326,17 +333,19 @@ static void game_on() {
         button_wait_time = millis();
       }
       dx = data->tx + 1;
+      tetState |= TET_MOVED;
     }
 
     dy = data->ty;
-    if((gr->pressed(DOWN_BUTTON) && !stopDrop) || gr->justPressed(DOWN_BUTTON)) {
-      stopDrop = 0;
+    if((gr->pressed(DOWN_BUTTON) && !(tetState & TET_STOP_DROP)) || gr->justPressed(DOWN_BUTTON)) {
+      tetState &= ~TET_STOP_DROP;
       dy += gr->pressed(DOWN_BUTTON);
     }
 
     dr = data->tet_now_rot;
     if(gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON)) {
       dr = (dr + 1) % 4;
+      tetState |= TET_MOVED;
       if ( ! fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
          if(fit_tetromino(dx + 1, dy, tetrominoes[data->tet_now_sel][dr])) {
           dx = dx + 1;
@@ -348,52 +357,52 @@ static void game_on() {
       }
     }
 
-    allowDrop = data->tx == dx && data->tet_now_rot == dr;
-    if ((! allowDrop || data->ty != dy) && fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
+    if (((tetState & TET_MOVED) || data->ty != dy) && fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
       data->tx = dx;
       data->ty = dy;
       data->tet_now_rot = dr;
+      lockAfterXFrames = tetState & TET_MOVED ? gr->frameCount + LOCK_TIME : lockAfterXFrames;
     } else {
+      // If down key held trigger immediate drop
+      if(dy > data->ty) {
+        tetState |= TET_HIT_BOTTOM;
+      }
       dx = data->tx;
       dy = data->ty;
       dr = data->tet_now_rot;
     }
 
-    if (gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS]) / 2)) {
+    if (gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS - 1]) / 2)) {
       if (fit_tetromino(data->tx, data->ty + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
           data->ty++;
-      } else {
-          hitBottm = 1;
+      } else if(! (tetState & TET_HIT_BOTTOM)) {
+          tetState |= TET_HIT_BOTTOM;
+          lockAfterXFrames = gr->frameCount + LOCK_TIME;
       }
-    } 
-
-    if (gr->everyXFrames(15) && hitBottm) {
-      if(allowDrop) {
-        draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
-        remove_lines();
-        display_stats();
-
-        // Game over?
-        if (data->ty <= 1) {
-          data->gameOn = 0;
-          break;
-        }
-        data->tx = 3;
-        data->ty = 0;
-        dx = data->tx;
-        stopDrop = 1;
-        hitBottm = 0;
-        next_tetromino();
-      }
-      allowDrop = 1;
     }
+
+    if ((tetState & TET_HIT_BOTTOM) && gr->frameCount >= lockAfterXFrames) {
+      draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
+      remove_lines();
+      display_stats();
+
+      // Game over?
+      if (data->ty <= 1) {
+        data->gameOn = 0;
+        break;
+      }
+      data->tx = 3;
+      data->ty = 0;
+      dx = data->tx;
+      tetState |= TET_STOP_DROP;
+      tetState &= ~TET_HIT_BOTTOM;
+      next_tetromino();
+      lockAfterXFrames = gr->frameCount + LOCK_TIME;
+    }
+
     display_board();
     display_now_next();
 
-    // Show CPU load
-    // gr->fillRect(43, 17, 84, 9);
-    // gr->setCursor(71, 18);
-    // gr->print(gr->cpuLoad());
     gr->display();
     gr->idle();
   } // for(;;)
