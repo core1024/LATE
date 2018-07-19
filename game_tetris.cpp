@@ -297,8 +297,10 @@ static void display_stats() {
 }
 
 static void game_on() {
+  // TODO: use single var and bitmask
   uint8_t allowDrop = 1;
   uint8_t stopDrop = 0;
+  uint8_t hitBottm = 0;
   display_background();
   display_stats();
 
@@ -313,7 +315,6 @@ static void game_on() {
     }
 
     if(gr->pressed(LEFT_BUTTON) && (millis() - button_wait_time > 250)) {
-      allowDrop = 0;
       if(gr->justPressed(LEFT_BUTTON)) {
         button_wait_time = millis();
       }
@@ -321,7 +322,6 @@ static void game_on() {
     }
 
     if(gr->pressed(RIGHT_BUTTON) && (millis() - button_wait_time > 250)) {
-      allowDrop = 0;
       if(gr->justPressed(RIGHT_BUTTON)) {
         button_wait_time = millis();
       }
@@ -336,7 +336,6 @@ static void game_on() {
 
     dr = data->tet_now_rot;
     if(gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON)) {
-      allowDrop = 0;
       dr = (dr + 1) % 4;
       if ( ! fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
          if(fit_tetromino(dx + 1, dy, tetrominoes[data->tet_now_sel][dr])) {
@@ -353,6 +352,7 @@ static void game_on() {
       data->tx = dx;
       data->ty = dy;
       data->tet_now_rot = dr;
+      allowDrop = 0;
     } else {
       dx = data->tx;
       dy = data->ty;
@@ -361,8 +361,14 @@ static void game_on() {
 
     if (gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS]) / 2)) {
       if (fit_tetromino(data->tx, data->ty + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
-        data->ty++;
-      } else if(allowDrop) {
+          data->ty++;
+      } else {
+          hitBottm = 1;
+      }
+    } 
+
+    if (gr->everyXFrames(15) && hitBottm) {
+      if(allowDrop) {
         draw_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot], 1);
         remove_lines();
         display_stats();
@@ -376,6 +382,7 @@ static void game_on() {
         data->ty = 0;
         dx = data->tx;
         stopDrop = 1;
+        hitBottm = 0;
         next_tetromino();
       }
       allowDrop = 1;
