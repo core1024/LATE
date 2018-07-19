@@ -1,67 +1,37 @@
 # Arduino Mini Games
+A game that features several modes that fit into Arduboy memmory, I enjoy and I find simple enough to code and pack together, so I'll be able to enjoy them on Arduboy too.
 
-## Hardware:
- * 1.3" SH1106 OLED Display
- * (micro)SD card reader module
- * buttons
+As of now, there's no support for RGB LED and sound.
 
- ### Schematic:
+Music is not planned at all.
 
- Buttons and display layout:
+## Modes:
+ * Tetris - Tetris clone. Graphics inspied by the Gameboy version. Gameplay features ghost piece, wall kicks and lock delay.
+    ### Fetures
+    - Enjoyable gameplay
+    - Easy on the eyes graphics
+    ### TODO:
+    - Wall kicks sometimes fell wired
+    - RGB/Sound signals for start, lock, line and game over.
 
- ```
-          ____
-   [L]   |OLED|   [B]
- [D] [U] |UP->|
-   [R]   |____|   [A]
+ * 1010! - A clone of 1010! by Gram Games.
+    ### Fetures
+    - Enjoyable gameplay
+    - Easy on the eyes graphics
+    ### TODO:
+    - Performance tweaks.
+    - Scoring systems? I need to verify with the origial for correctness.
+    - Random generator. According to [this page](http://blog.coelho.net/games/2016/07/28/1010-game.html) 1010! uses uneven random distribution accross the pieces.
+    - RGB/Sound signals for start, obstructed/placed block and game over.
+
+## More modes?
+I have plans to add more modes. Maybe even blockless. Something like "Stick Hero" by Ketchapp, "Flappy Bird" by dotGEARS or T-Rex Runner by... IDK maybe Google?
+
+If it fits it sits :)
 ```
+  /\**/\
+ ( o_o  )_)
+ ,(u  u  ,),
+{}{}{}{}{}{}
 
-All pins are defined in the beginning of the sketch. Look for `BTN_PIN_<X>` where `<X>` is the button name.
-
-**NOTE:** *The buttons are hooked according to display orientation and latter rotated by `buttonsRotate()`.*
-
-## Deps:
-
-* U8G2 (Sketch -> Include Library -> Manage Libraries...)
-* PetitFS (`git clone https://github.com/greiman/PetitFS.git`)
-
-The SD card `CS` pin is defined inside `PetitFS` library.
-
-```patch
-diff --git a/src/pffArduino.h b/src/pffArduino.h
-index 3eaeb4f..8f8ef3b 100644
---- a/src/pffArduino.h
-+++ b/src/pffArduino.h
-@@ -5,7 +5,7 @@
- #include "integer.h"
-
- // SD chip select pin
--#define SD_CS_PIN 10
-+#define SD_CS_PIN 5
-
- // Use SPI SCK divisor of 2 if nonzero else 4.
- #define SPI_FCPU_DIV_2 1
-diff --git a/src/pffconf.h b/src/pffconf.h
-index c8ccdf1..03742de 100644
---- a/src/pffconf.h
-+++ b/src/pffconf.h
-@@ -10,12 +10,12 @@
- /---------------------------------------------------------------------------*/
-
- #define        _USE_READ       1       /* Enable pf_read() function */
--#define        _USE_DIR        1       /* Enable pf_opendir() and pf_readdir() function */
-+#define        _USE_DIR        0       /* Enable pf_opendir() and pf_readdir() function */
- #define        _USE_LSEEK      1       /* Enable pf_lseek() function */
- #define        _USE_WRITE      1       /* Enable pf_write() function */
-
--#define _FS_FAT12      1       /* Enable FAT12 */
--#define _FS_FAT16      1       /* Enable FAT16 */
-+#define _FS_FAT12      0       /* Enable FAT12 */
-+#define _FS_FAT16      0       /* Enable FAT16 */
- #define _FS_FAT32      1       /* Enable FAT32 */
 ```
-
-## Games (WIP):
- * bGun - No score, no speed increase
- * Tetris - Mostly compilant with <https://tetris.wiki/Tetris_(NES,_Nintendo)>
- * Snake - No speed increase, lame score
