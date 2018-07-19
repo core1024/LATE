@@ -348,11 +348,11 @@ static void game_on() {
       }
     }
 
-    if (fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
+    allowDrop = data->tx == dx && data->tet_now_rot == dr;
+    if ((! allowDrop || data->ty != dy) && fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
       data->tx = dx;
       data->ty = dy;
       data->tet_now_rot = dr;
-      allowDrop = 0;
     } else {
       dx = data->tx;
       dy = data->ty;
