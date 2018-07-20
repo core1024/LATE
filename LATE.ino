@@ -2,7 +2,7 @@
 #include <Arduboy2.h>
 #include <EEPROM.h>
 
-#include "buttons.h"
+#include "menu.h"
 
 #include "game_tetris.h"
 #include "game_1010.h"
@@ -45,8 +45,6 @@ void setup() {
 
   arduboy.begin();
   arduboy.setFrameRate(30);
-  buttonsSetup(&arduboy);
-
   fh = 8;
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduboy2.h>
-#include "buttons.h"
+#include "menu.h"
 
 extern Arduboy2 arduboy;
 
