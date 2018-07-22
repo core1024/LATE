@@ -123,7 +123,7 @@ void loop() {
     drawNumber(&arduboy, 69, 13, hiScore, WHITE, 0);
 
     // Game over
-    if(1 || !game_on && last_score != ~0) {
+    if(!game_on && last_score != ~0) {
 
       arduboy.setCursor(37, 20);
       arduboy.print(F("GAME OVER"));
@@ -163,16 +163,6 @@ void loop() {
       arduboy.fillRect(2, 20, 124, 40, BLACK);
     }
 
-    // Show the menu
-    // arduboy.setCursor(2, 12);
-    // arduboy.print(F("HIGH SCORE "));
-    // arduboy.print(hiScore);
-
-    // if (game_on) {
-    //   arduboy.setCursor(2, 22);
-    //   arduboy.print(F("GAME SCORE "));
-    //   arduboy.print(score);
-    // }
 
     arduboy.setCursor(2, 45);
     arduboy.print(F("[A] - "));
