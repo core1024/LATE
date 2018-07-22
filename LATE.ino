@@ -127,16 +127,11 @@ void loop() {
     arduboy.drawFastHLine(0, 10, WIDTH);
 
     arduboy.drawBitmap(60, 12, cupBmp, 8, 8, WHITE);
-    if (game_on) {
-      drawNumber(&arduboy, 32, 13, score, WHITE, 7);
-    } else {
-      arduboy.drawFastHLine(56, 15, 3);
-    }
     drawNumber(&arduboy, 69, 13, hiScore, WHITE, 0);
 
     // Game over
     if(!game_on && last_score != ~0) {
-
+      drawNumber(&arduboy, 32, 13, score, WHITE, 7);
       arduboy.setCursor(37, 20);
       arduboy.print(F("Game Over"));
 
@@ -172,9 +167,16 @@ void loop() {
         }
         arduboy.idle();
       }
-      arduboy.fillRect(61, 20, 124, 40, BLACK);
+      arduboy.fillRect(2, 20, 124, 42, BLACK);
+      drawNumber(&arduboy, 32, 13, score, BLACK, 7);
+    }
+
+    arduboy.drawBitmap(61, 32, games[choice].logo, 7, 7, WHITE);
+
+    if (game_on) {
+      drawNumber(&arduboy, 32, 13, score, WHITE, 7);
     } else {
-      arduboy.drawBitmap(61, 32, games[choice].logo, 7, 7, WHITE);
+      arduboy.drawFastHLine(56, 15, 3);
     }
 
     arduboy.drawBitmap(2, 55, aBmp, 7, 7, WHITE);
