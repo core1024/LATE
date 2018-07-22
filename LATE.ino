@@ -21,6 +21,7 @@ struct game_t {
   const __FlashStringHelper *name;
   int address;
   void (*play)(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_t *score, uint32_t *hiScore);
+  const uint8_t *logo;
 };
 
 const uint8_t game_data_sz = 240;
@@ -39,9 +40,11 @@ void setup() {
   games[0].name = F("Blocks Arcade");
   games[0].address = EEPROM_STORAGE_SPACE_START + sizeof(game_data);
   games[0].play = &gameTetris;
+  games[0].logo = gameTetrisLogo;
   games[1].name = F("Blocks Puzzle");
   games[1].address = EEPROM_STORAGE_SPACE_START + 2 * sizeof(game_data);
   games[1].play = &game1010;
+  games[1].logo = game1010Logo;
 
   arduboy.begin();
   arduboy.setFrameRate(30);
@@ -69,8 +72,17 @@ void loop() {
     arduboy.setCursor(2, fh * choice + fh + fh - 2);
     arduboy.print(">");
 
+    arduboy.drawBitmap(2, 55, dPadBmp, 7, 7, WHITE);
+    arduboy.setCursor(12, 55);
+    arduboy.print(F("Move"));
+    arduboy.drawBitmap(66, 55, aBmp, 7, 7, WHITE);
+    arduboy.setCursor(76, 55);
+    arduboy.print(F("Select"));
+
+
     for (i = 0; i < games_count; i++) {
-      arduboy.setCursor(8, fh * i + fh + fh - 2);
+      arduboy.drawBitmap(9, fh * i + fh + fh - 2, games[i].logo, 7, 7, WHITE);
+      arduboy.setCursor(23, fh * i + fh + fh - 2);
       arduboy.print(games[i].name);
     }
     arduboy.display();
@@ -126,7 +138,7 @@ void loop() {
     if(!game_on && last_score != ~0) {
 
       arduboy.setCursor(37, 20);
-      arduboy.print(F("GAME OVER"));
+      arduboy.print(F("Game Over"));
 
       if(last_score < score) {
         arduboy.setCursor(2, 37);
@@ -160,19 +172,21 @@ void loop() {
         }
         arduboy.idle();
       }
-      arduboy.fillRect(2, 20, 124, 40, BLACK);
-    }
-
-
-    arduboy.setCursor(2, 45);
-    arduboy.print(F("[A] - "));
-    if (game_on) {
-      arduboy.print(F("CONTINUE"));
+      arduboy.fillRect(61, 20, 124, 40, BLACK);
     } else {
-      arduboy.print(F("START"));
+      arduboy.drawBitmap(61, 32, games[choice].logo, 7, 7, WHITE);
     }
-    arduboy.setCursor(2, 55);
-    arduboy.print(F("[B] - EXIT GAME"));
+
+    arduboy.drawBitmap(2, 55, aBmp, 7, 7, WHITE);
+    arduboy.setCursor(12, 55);
+    if (game_on) {
+      arduboy.print(F("Resume"));
+    } else {
+      arduboy.print(F("Start"));
+    }
+    arduboy.drawBitmap(66, 55, bBmp, 7, 7, WHITE);
+    arduboy.setCursor(76, 55);
+    arduboy.print(F("Exit"));
 
     arduboy.display();
 
