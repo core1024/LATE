@@ -35,8 +35,6 @@ struct data_t {
 
 static struct data_t *data;
 
-static int8_t dx, dy, dr;
-
 static unsigned long button_wait_time;
 
 static const uint16_t tetrominoes[7][4] = {
@@ -133,7 +131,7 @@ static void next_tetromino() {
   }
 
   data->tet_now_sel = data->tet_next_sel;
-  data->tet_now_rot = dr = data->tet_next_rot;
+  data->tet_now_rot = data->tet_next_rot;
   data->tet_next_sel = data->bag[data->bag_pos];
   data->tet_next_rot = random(4);
 }
@@ -302,7 +300,6 @@ static void display_stats() {
 }
 
 static void game_on() {
-  // TODO: use single var and bitmask
   uint16_t lockAfterXFrames = gr->frameCount + LOCK_TIME;
   uint8_t tetState = 0;
   display_background();
@@ -321,10 +318,9 @@ static void game_on() {
     tetState &= ~TET_MOVED;
 
     // Vertical Movement
-    dy = data->ty;
     if((gr->pressed(DOWN_BUTTON) && !(tetState & TET_STOP_DROP)) || gr->justPressed(DOWN_BUTTON)) {
       tetState &= ~TET_STOP_DROP;
-      dy += gr->pressed(DOWN_BUTTON);
+      int8_t dy = data->ty + gr->pressed(DOWN_BUTTON);
       if(fit_tetromino(data->tx, dy, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
         data->ty = dy;
       } else {
@@ -337,16 +333,16 @@ static void game_on() {
       if(gr->justPressed(LEFT_BUTTON) || gr->justPressed(RIGHT_BUTTON)) {
         button_wait_time = millis();
       }
-      dx = data->tx + gr->pressed(RIGHT_BUTTON) - gr->pressed(LEFT_BUTTON);
+      int8_t dx = data->tx + gr->pressed(RIGHT_BUTTON) - gr->pressed(LEFT_BUTTON);
       if (fit_tetromino(dx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
+        tetState &= ~TET_HIT_BOTTOM;
         data->tx = dx;
         lockAfterXFrames = gr->frameCount + LOCK_TIME;
       }
     }
 
-    dr = data->tet_now_rot;
     if(gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON)) {
-      dr = (dr + 1) % 4;
+      int8_t dr = (data->tet_now_rot + 1) % 4;
       tetState |= TET_MOVED;
       if ( ! fit_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][dr])) {
         if(fit_tetromino(data->tx + 1, data->ty, tetrominoes[data->tet_now_sel][dr])) {
@@ -360,12 +356,13 @@ static void game_on() {
         }
       }
       if(dr != data->tet_now_rot) {
+        tetState &= ~TET_HIT_BOTTOM;
         data->tet_now_rot = dr;
         lockAfterXFrames = gr->frameCount + LOCK_TIME;
       }
     }
 
-    if (! (tetState & TET_HIT_BOTTOM) && gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS - 1]) / 2)) {
+    if (! (tetState & TET_HIT_BOTTOM) && gr->everyXFrames((level_speed[data->level < NUM_LEVELS ? data->level : NUM_LEVELS - 1]) / 2)) {
       if (fit_tetromino(data->tx, data->ty + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
           data->ty++;
       } else {
@@ -386,7 +383,6 @@ static void game_on() {
       }
       data->tx = 3;
       data->ty = 0;
-      dx = data->tx;
       tetState |= TET_STOP_DROP;
       tetState &= ~TET_HIT_BOTTOM;
       next_tetromino();
@@ -421,8 +417,8 @@ static void game_new(void) {
   data->score = 0;
   data->lines = 0;
   data->level = 0;
-  data->tx = dx = 3;
-  data->ty = dy = 0;
+  data->tx = 3;
+  data->ty = 0;
 
   data->tet_next_sel = random(7);
   data->tet_next_rot = random(4);
