@@ -1,12 +1,19 @@
-# Arduino Mini Games
-A game that features several modes that fit into Arduboy memmory, I enjoy and I find simple enough to code and pack together, so I'll be able to enjoy them on Arduboy too.
+# LATE - Little Arduboy Timekiller Endeavour
+A game that features several modes that fit into Arduboy memmory. I find them simple enough to code and pack together, so I'll be able to enjoy them on Arduboy too.
+
+The game state is saved in the EEPROM when the pause menu is issued (usually by pressing [B]).
 
 As of now, there's no support for RGB LED and sound.
 
 Music is not planned at all.
 
+## Tips and tricks:
+
+Hold [Left] while pressing [A] in the menu for reset.
+That way you can reset the current game state to start a new game (in the pause menu) or even reset the whole game data for the current mode (in the main menu), including high scores and any game state.
+
 ## Modes:
- * Tetris - Tetris clone. Graphics inspied by the Gameboy version. Gameplay features ghost piece, wall kicks and lock delay.
+ * **Blocks Arcade** - Tetris clone. Graphics inspied by the Gameboy version. Gameplay features ghost piece, wall kicks and lock delay.
     ### Fetures
     - Enjoyable gameplay
     - Easy on the eyes graphics
@@ -14,7 +21,7 @@ Music is not planned at all.
     - Wall kicks sometimes fell wired
     - RGB/Sound signals for start, lock, line and game over.
 
- * 1010! - A clone of 1010! by Gram Games.
+ * **Blocks Puzzle** - A clone of 1010! by Gram Games.
     ### Fetures
     - Enjoyable gameplay
     - Easy on the eyes graphics

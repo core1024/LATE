@@ -320,62 +320,55 @@ static void game_on() {
 
     tetState &= ~TET_MOVED;
 
-    if(gr->pressed(LEFT_BUTTON) && (millis() - button_wait_time > 250)) {
-      if(gr->justPressed(LEFT_BUTTON)) {
-        button_wait_time = millis();
-      }
-      dx = data->tx - 1;
-      tetState |= TET_MOVED;
-    }
-
-    if(gr->pressed(RIGHT_BUTTON) && (millis() - button_wait_time > 250)) {
-      if(gr->justPressed(RIGHT_BUTTON)) {
-        button_wait_time = millis();
-      }
-      dx = data->tx + 1;
-      tetState |= TET_MOVED;
-    }
-
+    // Vertical Movement
     dy = data->ty;
     if((gr->pressed(DOWN_BUTTON) && !(tetState & TET_STOP_DROP)) || gr->justPressed(DOWN_BUTTON)) {
       tetState &= ~TET_STOP_DROP;
       dy += gr->pressed(DOWN_BUTTON);
+      if(fit_tetromino(data->tx, dy, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
+        data->ty = dy;
+      } else {
+        tetState |= TET_HIT_BOTTOM;
+      }
+    }
+
+    // Horizontal Movement
+    if((gr->pressed(LEFT_BUTTON) || gr->pressed(RIGHT_BUTTON)) && (millis() - button_wait_time > 250)) {
+      if(gr->justPressed(LEFT_BUTTON) || gr->justPressed(RIGHT_BUTTON)) {
+        button_wait_time = millis();
+      }
+      dx = data->tx + gr->pressed(RIGHT_BUTTON) - gr->pressed(LEFT_BUTTON);
+      if (fit_tetromino(dx, data->ty, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
+        data->tx = dx;
+        lockAfterXFrames = gr->frameCount + LOCK_TIME;
+      }
     }
 
     dr = data->tet_now_rot;
     if(gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON)) {
       dr = (dr + 1) % 4;
       tetState |= TET_MOVED;
-      if ( ! fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
-         if(fit_tetromino(dx + 1, dy, tetrominoes[data->tet_now_sel][dr])) {
-          dx = dx + 1;
-         } else if(fit_tetromino(dx - 1, dy, tetrominoes[data->tet_now_sel][dr])) {
-           dx = dx - 1;
-         } else {
-           dy = dy - 1;
-         }
+      if ( ! fit_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][dr])) {
+        if(fit_tetromino(data->tx + 1, data->ty, tetrominoes[data->tet_now_sel][dr])) {
+          data->tx = data->tx + 1;
+        } else if(fit_tetromino(data->tx - 1, data->ty, tetrominoes[data->tet_now_sel][dr])) {
+          data->tx = data->tx - 1;
+        } else if(fit_tetromino(data->tx, data->ty - 1, tetrominoes[data->tet_now_sel][dr])) {
+          data->ty = data->ty - 1;
+        } else {
+          dr = data->tet_now_rot;
+        }
+      }
+      if(dr != data->tet_now_rot) {
+        data->tet_now_rot = dr;
+        lockAfterXFrames = gr->frameCount + LOCK_TIME;
       }
     }
 
-    if (((tetState & TET_MOVED) || data->ty != dy) && fit_tetromino(dx, dy, tetrominoes[data->tet_now_sel][dr])) {
-      data->tx = dx;
-      data->ty = dy;
-      data->tet_now_rot = dr;
-      lockAfterXFrames = tetState & TET_MOVED ? gr->frameCount + LOCK_TIME : lockAfterXFrames;
-    } else {
-      // If down key held trigger immediate drop
-      if(dy > data->ty) {
-        tetState |= TET_HIT_BOTTOM;
-      }
-      dx = data->tx;
-      dy = data->ty;
-      dr = data->tet_now_rot;
-    }
-
-    if (gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS - 1]) / 2)) {
+    if (! (tetState & TET_HIT_BOTTOM) && gr->everyXFrames((data->level < NUM_LEVELS ? level_speed[data->level] : level_speed[NUM_LEVELS - 1]) / 2)) {
       if (fit_tetromino(data->tx, data->ty + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
           data->ty++;
-      } else if(! (tetState & TET_HIT_BOTTOM)) {
+      } else {
           tetState |= TET_HIT_BOTTOM;
           lockAfterXFrames = gr->frameCount + LOCK_TIME;
       }

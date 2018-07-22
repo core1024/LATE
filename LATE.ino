@@ -2,7 +2,7 @@
 #include <Arduboy2.h>
 #include <EEPROM.h>
 
-#include "menu.h"
+#include "common.h"
 
 #include "game_tetris.h"
 #include "game_1010.h"
@@ -36,10 +36,10 @@ uint8_t fh;
 static unsigned long button_wait_time;
 
 void setup() {
-  games[0].name = F("TETRIS");
+  games[0].name = F("Blocks Arcade");
   games[0].address = EEPROM_STORAGE_SPACE_START + sizeof(game_data);
   games[0].play = &gameTetris;
-  games[1].name = F("1010!");
+  games[1].name = F("Blocks Puzzle");
   games[1].address = EEPROM_STORAGE_SPACE_START + 2 * sizeof(game_data);
   games[1].play = &game1010;
 
@@ -63,7 +63,7 @@ void loop() {
 
     arduboy.drawRect(0, 0, WIDTH, HEIGHT);
     arduboy.setCursor(2, 2);
-    arduboy.print(F("MENU"));
+    arduboy.print(F("Choose Game Mode"));
     arduboy.drawFastHLine(0, fh + 2, WIDTH);
 
     arduboy.setCursor(2, fh * choice + fh + fh - 2);
@@ -114,20 +114,24 @@ void loop() {
     arduboy.print(games[choice].name);
     arduboy.drawFastHLine(0, 10, WIDTH);
 
+    arduboy.drawBitmap(60, 12, cupBmp, 8, 8, WHITE);
+    if (game_on) {
+      drawNumber(&arduboy, 32, 13, score, WHITE, 7);
+    } else {
+      arduboy.drawFastHLine(56, 15, 3);
+    }
+    drawNumber(&arduboy, 69, 13, hiScore, WHITE, 0);
+
     // Game over
-    if(!game_on && last_score != ~0) {
-      arduboy.setCursor(37, 12);
+    if(1 || !game_on && last_score != ~0) {
+
+      arduboy.setCursor(37, 20);
       arduboy.print(F("GAME OVER"));
 
       if(last_score < score) {
-        arduboy.setCursor(2, 28);
-        arduboy.print(F("CONGRATULATIONS!"));
         arduboy.setCursor(2, 37);
-        arduboy.print(F("You score"));
+        arduboy.print(F("Congratulations!"));
         arduboy.setCursor(2, 46);
-        arduboy.print(hiScore);
-        arduboy.print(F(" points."));
-        arduboy.setCursor(2, 55);
         arduboy.print(F("That's a new record!"));
       } else if(score / last_score * 100 > 75) {
         arduboy.setCursor(20, 28);
@@ -156,19 +160,19 @@ void loop() {
         }
         arduboy.idle();
       }
-      arduboy.fillRect(2, 12, 124, 50, BLACK);
+      arduboy.fillRect(2, 20, 124, 40, BLACK);
     }
 
     // Show the menu
-    arduboy.setCursor(2, 12);
-    arduboy.print(F("HIGH SCORE "));
-    arduboy.print(hiScore);
+    // arduboy.setCursor(2, 12);
+    // arduboy.print(F("HIGH SCORE "));
+    // arduboy.print(hiScore);
 
-    if (game_on) {
-      arduboy.setCursor(2, 22);
-      arduboy.print(F("GAME SCORE "));
-      arduboy.print(score);
-    }
+    // if (game_on) {
+    //   arduboy.setCursor(2, 22);
+    //   arduboy.print(F("GAME SCORE "));
+    //   arduboy.print(score);
+    // }
 
     arduboy.setCursor(2, 45);
     arduboy.print(F("[A] - "));

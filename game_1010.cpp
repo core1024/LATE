@@ -204,23 +204,6 @@ static const uint8_t tiles[NUM_TILES][5] = {
 	}
 };
 
-static void drawNumber(uint8_t x, uint8_t y, uint32_t number, uint8_t color, uint8_t padding) {
-  int8_t digit, maxPad, length = 1;
-  uint32_t tempNum = number;
-  while(tempNum /= 10) {
-    length++;
-  }
-  maxPad = max(length, padding);
-  tempNum = number;
-  while(maxPad > 0) {
-    maxPad--;
-    digit = tempNum % 10;
-    tempNum /= 10;
-    if(! digit && (maxPad + length - padding < 0)) continue;
-    arduboy.drawBitmap(x + (maxPad * 4), y, numImg[digit], 3, 5, color);
-  }
-}
-
 static uint8_t get_pixel(int8_t ox, int8_t oy, int8_t x, int8_t y, uint8_t color, uint8_t mask) {
 	return bitRead(data->screen[oy + y], ox + x) == color;
 } // end of get_pixel
@@ -321,18 +304,17 @@ static void display_square(uint8_t x, uint8_t y, uint8_t w, uint8_t mask, uint8_
 
 static void display_background(void) {
 	gr->drawRect(0, 0, 63, 63, WHITE);
-	gr->drawBitmap(64+29, 1, cupImg, 8, 8, WHITE);
+	gr->drawBitmap(64+29, 1, cupBmp, 8, 8, WHITE);
 }
 
-// extern void drawNumber(uint8_t x, uint8_t y, uint32_t number, uint8_t color, uint8_t padding);
 static void display_board(void) {
 	if(data->hiScore < data->score) {
 		data->hiScore = data->score;
 	}
 	gr->fillRect(65, 2, 28, 5, BLACK);
-	drawNumber(65, 2, data->score, WHITE, 7);
+	drawNumber(gr, 65, 2, data->score, WHITE, 7);
 	gr->fillRect(102, 2, 26, 5, BLACK);
-	drawNumber(102, 2, data->hiScore, WHITE, 0);
+	drawNumber(gr, 102, 2, data->hiScore, WHITE, 0);
 
 	for (int x = 0; x < BOARD_LINES; x++) {
 		int sx = x * 6 + 2;
