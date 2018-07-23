@@ -34,7 +34,98 @@ uint8_t choice = 0;
 
 uint8_t fh;
 
-static unsigned long button_wait_time;
+void bootLogo() {
+  uint8_t state = 0;
+  uint8_t frame = 0;
+  int r = 10, x = -r, y = 6, err = 2-2*r;
+
+  arduboy.clear();
+
+  while(!arduboy.buttonsState()) {
+    if (!arduboy.nextFrame()) {
+      continue;
+    }
+    switch(state) {
+      case 0: // clock
+        arduboy.drawCircle(30, 16, 14, WHITE);
+        arduboy.drawFastVLine(30, y, 10, WHITE);
+        arduboy.drawFastHLine(30, y + 10, 5, WHITE);
+        if(frame > 10) {
+          frame = 0;
+          state++;
+          continue;
+        }
+        frame++;
+      break;
+      case 1: // Falling L
+        arduboy.drawFastVLine(30, y, 10, BLACK);
+        arduboy.drawFastHLine(30, y + 10, 5, BLACK);
+        y = 6 + frame * frame;
+        if(y > 47) {
+          arduboy.drawCircle(30, 16, 14, BLACK);
+          arduboy.drawFastVLine(30, 43, 10, WHITE);
+          arduboy.drawFastHLine(30, 53, 5, WHITE);
+
+          arduboy.setCursor(41, 8);
+          arduboy.print(F("CORE1024"));
+          arduboy.setCursor(41, 18);
+          arduboy.print(F("Presents"));
+          state++;
+          y = frame = 0;
+          continue;
+        }
+        arduboy.drawFastVLine(30, y, 10, WHITE);
+        arduboy.drawFastHLine(30, y + 10, 5, WHITE);
+        frame++;
+      break;
+      case 2: // A
+        if(frame < 3) {
+          arduboy.drawFastVLine(50 + frame, 52 - 3 * frame, 3, WHITE);
+          arduboy.drawPixel(50, 54, BLACK);
+        } else if(frame < 7) {
+          arduboy.drawFastVLine(50 + frame, 34 + 3 * frame, 3, WHITE);
+          arduboy.drawPixel(56, 54, BLACK);
+        } else {
+          state++;
+        }
+        frame++;
+      break;
+      case 3: // T
+        arduboy.drawLine(74-x, 53-y, 74, 53, BLACK);
+        r = err;
+        if (r > x) err += ++x*2+1;
+        if (r <= y) err += ++y*2+1;
+        arduboy.drawLine(74-x, 53-y, 74, 53, WHITE);
+
+        if(x >= 0) {
+          arduboy.drawFastHLine(72, 43, 5, WHITE);
+          state++;
+          frame = 0;
+        }
+      break;
+      case 4: // E
+        arduboy.drawPixel(93, 43 + (frame % 10));
+        arduboy.drawPixel(93 + (frame % 5), 43);
+        if(frame > 4)
+        arduboy.drawPixel(93 + (frame % 5), 48);
+        if(frame > 9)
+        arduboy.drawPixel(93 + (frame % 5), 53);
+        frame++;
+        if(frame > 15) {
+          state++;
+          frame = 0;
+        }
+      break;
+      default:
+        if(frame > 30) {
+          return;
+        }
+        frame++;
+      break;
+    } // switch
+    arduboy.display();
+  } // for
+}
 
 void setup() {
   games[0].name = F("Blocks Arcade");
@@ -46,8 +137,13 @@ void setup() {
   games[1].play = &game1010;
   games[1].logo = game1010Logo;
 
-  arduboy.begin();
+  // arduboy.begin();
+  arduboy.boot();
+  arduboy.flashlight();
+  arduboy.systemButtons();
   arduboy.setFrameRate(30);
+  bootLogo();
+
   fh = 8;
 }
 
@@ -57,6 +153,7 @@ void loop() {
   uint8_t game_on = 0;
   uint8_t i;
 
+  arduboy.waitNoButtons();
   while (!game_on) {
     if (!arduboy.nextFrame()) {
       continue;
@@ -118,6 +215,7 @@ void loop() {
     game_on = score = hiScore = 0;
   }
   last_score = ~0;
+
   do {
     arduboy.clear();
 
