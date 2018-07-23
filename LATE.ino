@@ -7,14 +7,12 @@
 #include "game_tetris.h"
 #include "game_1010.h"
 
-#define BTN_PIN_UP 9
-#define BTN_PIN_DOWN 6
-#define BTN_PIN_LEFT 8
-#define BTN_PIN_RIGHT 7
-#define BTN_PIN_A 4
-#define BTN_PIN_B 2
-#define BTN_PIN_C A3
+#define GAME_ID 112
+#define OFFSET_GAME_ID (EEPROM_STORAGE_SPACE_START + 112)
+#define OFFSET_GAME_DATA (OFFSET_GAME_ID + sizeof(byte))
 
+#define FH 8
+#define GAME_DATA_SZ 240
 Arduboy2 arduboy;
 
 struct game_t {
@@ -24,15 +22,12 @@ struct game_t {
   const uint8_t *logo;
 };
 
-const uint8_t game_data_sz = 240;
-uint8_t game_data[game_data_sz];
+uint8_t game_data[GAME_DATA_SZ];
 
 const uint8_t games_count = 2;
 struct game_t games[games_count];
 
 uint8_t choice = 0;
-
-uint8_t fh;
 
 void bootLogo() {
   uint8_t state = 0;
@@ -61,7 +56,7 @@ void bootLogo() {
         arduboy.drawFastVLine(30, y, 10, BLACK);
         arduboy.drawFastHLine(30, y + 10, 5, BLACK);
         y = 6 + frame * frame;
-        if(y > 47) {
+        if(y > 43) {
           arduboy.drawCircle(30, 16, 14, BLACK);
           arduboy.drawFastVLine(30, 43, 10, WHITE);
           arduboy.drawFastHLine(30, 53, 5, WHITE);
@@ -72,7 +67,7 @@ void bootLogo() {
           arduboy.print(F("Presents"));
           state++;
           y = frame = 0;
-          continue;
+          break;
         }
         arduboy.drawFastVLine(30, y, 10, WHITE);
         arduboy.drawFastHLine(30, y + 10, 5, WHITE);
@@ -129,13 +124,22 @@ void bootLogo() {
 
 void setup() {
   games[0].name = F("Blocks Arcade");
-  games[0].address = EEPROM_STORAGE_SPACE_START + sizeof(game_data);
+  games[0].address = OFFSET_GAME_DATA;
   games[0].play = &gameTetris;
   games[0].logo = gameTetrisLogo;
   games[1].name = F("Blocks Puzzle");
-  games[1].address = EEPROM_STORAGE_SPACE_START + 2 * sizeof(game_data);
+  games[1].address = OFFSET_GAME_DATA + sizeof(game_data);
   games[1].play = &game1010;
   games[1].logo = game1010Logo;
+
+  if (EEPROM.read(OFFSET_GAME_ID) != GAME_ID)
+  {
+    EEPROM.put(OFFSET_GAME_ID, (byte)GAME_ID); // game id
+    memset(game_data, 0, sizeof(game_data));
+    for(int i = 0;i < games_count; i++) {
+      EEPROM.put(games[i].address, game_data);
+    }
+  }
 
   // arduboy.begin();
   arduboy.boot();
@@ -143,8 +147,6 @@ void setup() {
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
   bootLogo();
-
-  fh = 8;
 }
 
 void loop() {
@@ -164,9 +166,9 @@ void loop() {
     arduboy.drawRect(0, 0, WIDTH, HEIGHT);
     arduboy.setCursor(2, 2);
     arduboy.print(F("Choose Game Mode"));
-    arduboy.drawFastHLine(0, fh + 2, WIDTH);
+    arduboy.drawFastHLine(0, FH + 2, WIDTH);
 
-    arduboy.setCursor(2, fh * choice + fh + fh - 2);
+    arduboy.setCursor(2, FH * choice + FH + FH - 2);
     arduboy.print(">");
 
     arduboy.drawBitmap(2, 55, dPadBmp, 7, 7, WHITE);
@@ -178,8 +180,8 @@ void loop() {
 
 
     for (i = 0; i < games_count; i++) {
-      arduboy.drawBitmap(9, fh * i + fh + fh - 2, games[i].logo, 7, 7, WHITE);
-      arduboy.setCursor(23, fh * i + fh + fh - 2);
+      arduboy.drawBitmap(9, FH * i + FH + FH - 2, games[i].logo, 7, 7, WHITE);
+      arduboy.setCursor(23, FH * i + FH + FH - 2);
       arduboy.print(games[i].name);
     }
     arduboy.display();
@@ -210,10 +212,6 @@ void loop() {
   // Call game with MENU_EXIT to obtain scores
   (*games[choice].play)(&arduboy, game_data, MENU_EXIT, &game_on, &score, &hiScore);
 
-  if(hiScore == ~0 && game_on) {
-    memset(game_data, 0, sizeof(game_data));
-    game_on = score = hiScore = 0;
-  }
   last_score = ~0;
 
   do {
