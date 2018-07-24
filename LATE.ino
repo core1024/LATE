@@ -171,12 +171,13 @@ void loop() {
     arduboy.setCursor(2, FH * choice + FH + FH - 2);
     arduboy.print(">");
 
-    arduboy.drawBitmap(2, 55, dPadBmp, 7, 7, WHITE);
+    arduboy.drawBitmap(2, 55, aBmp, 7, 7, WHITE);
     arduboy.setCursor(12, 55);
-    arduboy.print(F("Move"));
-    arduboy.drawBitmap(66, 55, aBmp, 7, 7, WHITE);
-    arduboy.setCursor(76, 55);
     arduboy.print(arduboy.pressed(LEFT_BUTTON) ? F("Reset ") : F("Select"));
+
+    arduboy.drawBitmap(66, 55, dPadBmp, 7, 7, WHITE);
+    arduboy.setCursor(76, 55);
+    arduboy.print(F("Move"));
 
 
     for (i = 0; i < games_count; i++) {
@@ -288,11 +289,7 @@ void loop() {
       arduboy.pollButtons();
 
       arduboy.setCursor(12, 55);
-      if (game_on && ! arduboy.pressed(LEFT_BUTTON)) {
-        arduboy.print(F("Resume"));
-      } else {
-        arduboy.print(F("Start "));
-      }
+      arduboy.print(game_on && ! arduboy.pressed(LEFT_BUTTON) ? F("Resume") : F("Start "));
 
       if(arduboy.justPressed(A_BUTTON)) {
         menu = game_on && ! arduboy.pressed(LEFT_BUTTON) ? MENU_RESUME : MENU_NEW; break;
