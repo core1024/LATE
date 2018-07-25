@@ -6,6 +6,7 @@
 
 #include "game_tetris.h"
 #include "game_1010.h"
+#include "game_bb.h"
 
 #define GAME_ID 112
 #define OFFSET_GAME_ID (EEPROM_STORAGE_SPACE_START + 112)
@@ -24,7 +25,7 @@ struct game_t {
 
 uint8_t game_data[GAME_DATA_SZ];
 
-const uint8_t games_count = 2;
+const uint8_t games_count = 3;
 struct game_t games[games_count];
 
 uint8_t choice = 0;
@@ -127,10 +128,16 @@ void setup() {
   games[0].address = OFFSET_GAME_DATA;
   games[0].play = &gameTetris;
   games[0].logo = gameTetrisLogo;
+
   games[1].name = F("Blocks Puzzle");
   games[1].address = OFFSET_GAME_DATA + sizeof(game_data);
   games[1].play = &game1010;
   games[1].logo = game1010Logo;
+
+  games[2].name = F("Bridge Builder");
+  games[2].address = OFFSET_GAME_DATA + 2 * sizeof(game_data);
+  games[2].play = &gameBB;
+  games[2].logo = gameBBLogo;
 
   if (EEPROM.read(OFFSET_GAME_ID) != GAME_ID)
   {
@@ -146,7 +153,7 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  bootLogo();
+  //bootLogo();
 }
 
 void loop() {
