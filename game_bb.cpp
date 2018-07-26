@@ -34,8 +34,14 @@ static int8_t platform_end(struct platform_t platform) {
 
 static void platform_random(struct platform_t prev, struct platform_t *platform) {
 	platform->x = platform_end(prev) + random(2, BRIDGE_LEVEL - 10);
-	platform->width = random(5, BRIDGE_LEVEL);
+	platform->width = random(5, 30);
 	platform->bridge = 0;
+}
+
+static void platform_copy(struct platform_t src, struct platform_t *dest) {
+	dest->x = src.x;
+	dest->width = src.width;
+	dest->bridge = src.bridge;
 }
 
 static void display_platform(struct platform_t platform, uint8_t color) {
@@ -43,9 +49,10 @@ static void display_platform(struct platform_t platform, uint8_t color) {
 	gr->fillRect(platform.x, PLATFORM_LEVEL, platform.width, 9, color);
 	gr->drawPixel(platform.x + platform.width / 2, PLATFORM_LEVEL, BLACK);
 	if(platform.bridge) {
-		bridge_start = max(platform_end(data->platformCurr), 0);
+		bridge_start = 0;
 		gr->drawFastHLine(bridge_start,
-		BRIDGE_LEVEL, platform.x + platform.bridge - bridge_start, color);
+		BRIDGE_LEVEL,
+		platform.x + platform.bridge - bridge_start, color);
 	}
 }
 
@@ -102,8 +109,19 @@ static void hero_walk(int8_t from, int8_t to) {
 		display_hero(i % 3, i, gr->pressed(DOWN_BUTTON), WHITE);
 		gr->display();
 		display_hero(i % 3, i, gr->pressed(DOWN_BUTTON), BLACK);
+
+		// Game over?
+		if(platform_end(data->platformCurr) + bridge <= i &&
+			platform_end(data->platformCurr) + bridge <= data->platformNext.x) {
+			data->gameOn = 0;
+			break;
+		}
 		gr->idle();
 		i++;
+	}
+	data->score++;
+	if(data->score > data->hiScore) {
+		data->hiScore = data->score;
 	}
 }
 
@@ -123,8 +141,17 @@ static void build_bridge(void) {
 	gr->drawFastVLine(platform_end(data->platformCurr),
 		BRIDGE_LEVEL - bridge + 1, bridge, BLACK);
 	display_bridge(WHITE);
+
 	hero_walk(platform_end(data->platformCurr) - HERO_OFFSET,
 		platform_end(data->platformNext) - HERO_OFFSET);
+
+	data->platformNext.bridge =
+		platform_end(data->platformCurr) + bridge - data->platformNext.x;
+
+	platform_copy(data->platformNext, &data->platformCurr);
+	data->platformCurr.x = 32 - data->platformCurr.width / 2;
+	platform_random(data->platformCurr, &data->platformNext);
+	data->platformNext.bridge = bridge = 0;
 }
 
 
@@ -134,13 +161,13 @@ static void game_new(void) {
 	data->platformCurr.x = -19;
 	data->platformCurr.width = 36;
 	platform_random(data->platformCurr, &data->platformNext);
-	// data->platformNext.x = 80;
-	// data->platformNext.width = 48;
+	data->platformCurr.bridge = 0;
+	data->platformNext.bridge = 0;
 }
 
 static void game_on(void) {
 	bridge = 0;
-	while(!gr->justPressed(B_BUTTON)) {
+	while(data->gameOn && ! gr->justPressed(B_BUTTON)) {
 		if (!gr->nextFrame()) {
 			continue;
 		}
@@ -165,7 +192,6 @@ void gameBB(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uint32_
 	gr = sgr;
 	data = (struct data_t *)gdat;
 
-	gr->waitNoButtons();
 	if (menu == MENU_NEW) {
 		game_new();
 	}
