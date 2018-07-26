@@ -266,7 +266,7 @@ void loop() {
       arduboy.display();
       for (;;) {
         arduboy.pollButtons();
-        if(arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
+        if(buttonPressed(&arduboy)) {
           break;
         }
         arduboy.idle();

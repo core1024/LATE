@@ -16,3 +16,19 @@ void drawNumber(Arduboy2 *gr, uint8_t x, uint8_t y, uint32_t number, uint8_t col
     gr->drawBitmap(x + (maxPad * 4), y, digitsBmp[digit], 3, 5, color);
   }
 }
+
+int8_t buttonPressed(Arduboy2 *gr) {
+	return gr->justPressed(A_BUTTON) ||
+		gr->justPressed(UP_BUTTON) ||
+		gr->justPressed(DOWN_BUTTON) ||
+		gr->justPressed(LEFT_BUTTON) ||
+		gr->justPressed(RIGHT_BUTTON);
+}
+
+int8_t buttonReleased(Arduboy2 *gr) {
+	return gr->justReleased(A_BUTTON) ||
+		gr->justReleased(UP_BUTTON) ||
+		gr->justReleased(DOWN_BUTTON) ||
+		gr->justReleased(LEFT_BUTTON) ||
+		gr->justReleased(RIGHT_BUTTON);
+}

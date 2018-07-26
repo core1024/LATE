@@ -163,7 +163,7 @@ static void hero_walk(int8_t from, int8_t to) {
 			continue;
 		}
 		gr->pollButtons();
-		if(gr->justPressed(A_BUTTON)) {
+		if(buttonPressed(gr)) {
 			hero_state = hero_state ? 0 : 4;
 		}
 		display_background();
@@ -198,7 +198,7 @@ static void hero_walk(int8_t from, int8_t to) {
 
 static void rise_bridge(int8_t bridge_x) {
 	bridge = 0;
-	while(! gr->justReleased(A_BUTTON)) {
+	while(! buttonReleased(gr)) {
 		if (!gr->nextFrame()) {
 			continue;
 		}
@@ -304,7 +304,7 @@ static void game_on(void) {
 		display_background();
 		display_hero(0, platform_end(data->platformCurr) - HERO_OFFSET,
 			HERO_LEVEL, WHITE);
-		if(gr->justPressed(A_BUTTON)) {
+		if(buttonPressed(gr)) {
 			build_bridge();
 			if(data->gameOn) {
 				// Place new platform
