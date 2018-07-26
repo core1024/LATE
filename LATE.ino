@@ -153,7 +153,7 @@ void setup() {
   arduboy.flashlight();
   arduboy.systemButtons();
   arduboy.setFrameRate(30);
-  //bootLogo();
+  bootLogo();
 }
 
 void loop() {
