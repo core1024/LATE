@@ -60,3 +60,6 @@ const uint8_t bBmp[] PROGMEM = {
 };
 
 void drawNumber(Arduboy2 *gr, uint8_t x, uint8_t y, uint32_t number, uint8_t color, uint8_t padding);
+
+int8_t buttonPressed(Arduboy2 *gr);
+int8_t buttonReleased(Arduboy2 *gr);
