@@ -113,7 +113,7 @@ void bootLogo() {
         }
       break;
       default:
-        if(frame > 30) {
+        if(frame > 15) {
           return;
         }
         frame++;
@@ -162,7 +162,10 @@ void loop() {
   uint8_t game_on = 0;
   uint8_t i;
 
-  arduboy.waitNoButtons();
+  while(arduboy.buttonsState()) {
+    arduboy.idle();
+  }
+
   while (!game_on) {
     if (!arduboy.nextFrame()) {
       continue;
