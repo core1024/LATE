@@ -15,10 +15,10 @@ That way you can reset the current game state to start a new game (in the pause 
 ## Modes:
  * **Blocks Arcade** - Tetris clone. Graphics inspied by the Gameboy version. Gameplay features ghost piece, wall kicks and lock delay.
     ### Fetures
-    - Enjoyable gameplay
-    - Easy on the eyes graphics
+    - Classic Tetris gameplay
     ### TODO:
-    - Wall kicks sometimes fell wired
+    - Wall kicks sometimes feel wired
+    - Line animation
     - RGB/Sound signals for start, lock, line and game over.
 
  * **Blocks Puzzle** - A clone of 1010! by Gram Games.
@@ -29,16 +29,12 @@ That way you can reset the current game state to start a new game (in the pause 
     - Performance tweaks.
     - Scoring systems? I need to verify with the origial for correctness.
     - Random generator. According to [this page](http://blog.coelho.net/games/2016/07/28/1010-game.html) 1010! uses uneven random distribution accross the pieces.
-    - RGB/Sound signals for start, obstructed/placed block and game over.
+    - RGB/Sound signals for obstructed/placed/picking block and game over.
 
-## More modes?
-I have plans to add more modes. Maybe even blockless. Something like "Stick Hero" by Ketchapp, "Flappy Bird" by dotGEARS or T-Rex Runner by... IDK maybe Google?
-
-If it fits it sits :)
-```
-  /\**/\
- ( o_o  )_)
- ,(u  u  ,),
-{}{}{}{}{}{}
-
-```
+ * **Bridge Builder** - A clone of Stick Hero by Ketchapp.
+    ### Fetures
+    - Enjoyable gameplay
+    ### TODO:
+    - Performance tweaks.
+    - Animate coming of the next platform.
+    - RGB/Sound signals for bridge building, received bonus and game over.
