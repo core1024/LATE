@@ -25,7 +25,7 @@ struct data_t {
 static Arduboy2 *gr;
 
 const uint8_t spriteMap[][5] PROGMEM = {
-   {0b01110, 0b10001, 0b10101, 0b10001, 0b01110}
+   {0b11100, 0b11101, 0b00010, 0b11101, 0b11100}
 };
 
 
@@ -146,24 +146,25 @@ static void hero_fall(int8_t x, int8_t y) {
 	}
 }
 
-static void hero_score(void) {
-	data->score++;
+static void hero_score(int8_t up) {
+	data->score += up;
 	if(data->score > data->hiScore) {
 		data->hiScore = data->score;
 	}
 }
 
 
-static void hero_walk(int8_t from, int8_t to) {
+static int8_t hero_walk(int8_t from, int8_t to) {
 	int8_t bridge_end;
 	int8_t hero_state = 0;
+	int8_t claim_bonus = 0;
 	int8_t i = from;
 	while(i < to /* && ! gr->justPressed(B_BUTTON) */) {
 		if (!gr->nextFrame()) {
 			continue;
 		}
 		gr->pollButtons();
-		if(buttonPressed(gr)) {
+		if(buttonPressed(gr) && i + HERO_OFFSET + HERO_OFFSET <= data->platformNext.x) {
 			hero_state = hero_state ? 0 : 4;
 		}
 		display_background();
@@ -181,19 +182,18 @@ static void hero_walk(int8_t from, int8_t to) {
 			data->gameOn = 0;
 			hero_fall(i + HERO_OFFSET + (hero_state ? -1 : 1),
 				HERO_LEVEL - (hero_state ? 0 : HERO_HEIGHT));
-			return;
+			return 0;
 		}
 
 		// Pick bonus
 		if(hero_state && i + HERO_OFFSET >= bonus && i <= bonus + BONUS_OFFSET) {
 			bonus = 0;
-			data->bonus++;
-			hero_score();
+			claim_bonus = 1;
 		}
 		gr->idle();
 		i++;
 	}
-	hero_score();
+	return claim_bonus;
 }
 
 static void rise_bridge(int8_t bridge_x) {
@@ -231,22 +231,45 @@ static void place_bridge(int8_t bridge_x) {
 	bridge = bridge_short ? 0 : bridge;
 }
 
+static void bonus_up(int8_t claim_bonus) {
+	if(! claim_bonus) return;
+	int8_t y = HERO_LEVEL - 2;
+	int8_t hero_pos = platform_end(data->platformNext) - HERO_OFFSET;
+	while(! buttonPressed(gr) && y > 0) {
+		if (!gr->nextFrame()) {
+			continue;
+		}
+		gr->pollButtons();
+
+		display_background();
+		gr->drawFastHLine(hero_pos - 4, y + 2, 3);
+		gr->drawFastVLine(hero_pos - 3, y + 1, 3);
+		drawNumber(gr, hero_pos, y, claim_bonus, WHITE, 0);
+		display_hero(0, hero_pos, HERO_LEVEL, WHITE);
+		y -= (HERO_LEVEL - y) / 2;
+		gr->display();
+		gr->idle();
+	}
+}
+
 static void build_bridge(void) {
+	int8_t claim_bonus;
 	int8_t bridge_x = platform_end(data->platformCurr);
 
 	rise_bridge(bridge_x);
 	place_bridge(bridge_x);
 
-	if(bridge_x + bridge - 1 == data->platformNext.x + data->platformNext.width / 2) {
-		data->bonus++;
-		data->score++;
-	}
-
 	// Walk over the bridge
-	hero_walk(bridge_x - HERO_OFFSET,
+	claim_bonus = hero_walk(bridge_x - HERO_OFFSET,
 		max(platform_end(data->platformNext) - HERO_OFFSET,
 		bridge_x + bridge));
 
+	if(data->gameOn) {
+		claim_bonus += bridge_x + bridge - 1 == data->platformNext.x + data->platformNext.width / 2;
+		data->bonus += claim_bonus;
+		bonus_up(claim_bonus);
+		hero_score(claim_bonus + 1);
+	}
 }
 
 static void bonus_for_live(void) {
@@ -304,7 +327,7 @@ static void game_on(void) {
 		display_background();
 		display_hero(0, platform_end(data->platformCurr) - HERO_OFFSET,
 			HERO_LEVEL, WHITE);
-		if(buttonPressed(gr)) {
+		if(buttonPressed(gr) && ! gr->justPressed(B_BUTTON)) {
 			build_bridge();
 			if(data->gameOn) {
 				// Place new platform
