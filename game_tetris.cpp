@@ -11,6 +11,12 @@
 
 #define NUM_LEVELS 24
 
+enum tet_option_t: uint8_t {
+  TET_OPT_ROT_DIR = 1,
+  TET_OPT_DROP_UP = 2,
+  TET_OPT_DROP_DN = 4
+};
+
 static uint8_t level_speed[NUM_LEVELS] = {53, 49, 45, 41, 37, 33, 28, 22, 17, 11, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 3};
 
 static Arduboy2 *gr;
@@ -31,6 +37,7 @@ struct data_t {
   uint8_t tet_next_rot;
   int8_t tx;
   uint8_t ty;
+  uint8_t tet_option;
 };
 
 static struct data_t *data;
@@ -136,6 +143,12 @@ static void next_tetromino() {
   data->tet_next_rot = random(4);
 }
 
+uint8_t find_tet_bottom(void) {
+  uint8_t g = data->ty;
+  while(g < 20 && fit_tetromino(data->tx, g + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot])) g++;
+  return g;
+}
+
 static void display_bubble(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r) {
   gr->drawRoundRect(x, y, w, h, r + 2);
   gr->fillRoundRect(x + 2, y + 2, w - 4, h - 4, r);
@@ -178,8 +191,8 @@ static void display_background() {
   gr->drawPixel(36, 60);
   gr->drawPixel(37, 62);
 
-  for (int x = 1; x <= 10; x++) {
-    int x3 = x * 3 + 2;
+  for (uint8_t x = 1; x <= 10; x++) {
+    uint8_t x3 = x * 3 + 2;
     // Bottom wall
     gr->drawPixel(x3 + 0, 60);
     gr->drawPixel(x3 + 1, 60);
@@ -189,7 +202,7 @@ static void display_background() {
     gr->drawPixel(x3 + 3, 62);
   }
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     uint8_t v = i * 4;
 
     // Left wall
@@ -216,10 +229,10 @@ static void display_background() {
 }
 
 static void display_board() {
-  for (int x = 1; x <= 10; x++) {
-    int x3 = x * 3 + 4;
-    for (int y = 0; y < 20; y++) {
-      int y3 = y * 3;
+  for (uint8_t x = 1; x <= 10; x++) {
+    uint8_t x3 = x * 3 + 4;
+    for (uint8_t y = 0; y < 20; y++) {
+      uint8_t y3 = y * 3;
       gr->drawFastHLine(x3, y3 + 2, 2, BLACK);
       gr->drawFastVLine(x3 - 1, y3, 2, BLACK);
       if (get_pixel(x, y + BOARD_LINES - 21)) {
@@ -235,13 +248,12 @@ static void display_board() {
 
 static void display_now_next() {
   // Find ghost piece y position
-  int g = 0;
-  while(g < 20 && fit_tetromino(data->tx, ++g + 1, tetrominoes[data->tet_now_sel][data->tet_now_rot]));
+  uint8_t g = find_tet_bottom();
 
   // Next rect
   gr->fillRect(48, 42, 13, 13);
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     uint8_t tw;
     uint8_t bx = i % 4;
     uint8_t by = i / 4;
@@ -315,10 +327,29 @@ static void game_on() {
       return;
     }
 
+    if(gr->pressed(LEFT_BUTTON) && gr->pressed(RIGHT_BUTTON)) {
+      if(gr->justPressed(A_BUTTON)) {
+        data->tet_option ^= TET_OPT_ROT_DIR;
+        continue;
+      }
+      if(gr->justPressed(UP_BUTTON)) {
+        data->tet_option ^= TET_OPT_DROP_UP;
+        continue;
+      }
+      if(gr->justPressed(DOWN_BUTTON)) {
+        data->tet_option ^= TET_OPT_DROP_DN;
+        continue;
+      }
+    }
+
     tetState &= ~TET_MOVED;
 
     // Vertical Movement
-    if((gr->pressed(DOWN_BUTTON) && !(tetState & TET_STOP_DROP)) || gr->justPressed(DOWN_BUTTON)) {
+    if((!(data->tet_option & TET_OPT_DROP_UP) && gr->justPressed(UP_BUTTON)) ||
+      (!!(data->tet_option & TET_OPT_DROP_DN) && gr->justPressed(DOWN_BUTTON))) {
+      data->ty = find_tet_bottom();
+      tetState |= TET_HIT_BOTTOM;
+    } else if((gr->pressed(DOWN_BUTTON) && !(tetState & TET_STOP_DROP)) || gr->justPressed(DOWN_BUTTON)) {
       tetState &= ~TET_STOP_DROP;
       int8_t dy = data->ty + gr->pressed(DOWN_BUTTON);
       if(fit_tetromino(data->tx, dy, tetrominoes[data->tet_now_sel][data->tet_now_rot])) {
@@ -341,8 +372,9 @@ static void game_on() {
       }
     }
 
-    if(gr->justPressed(UP_BUTTON) || gr->justPressed(A_BUTTON)) {
-      int8_t dr = (data->tet_now_rot + 1) % 4;
+    // Rotation
+    if(gr->justPressed(A_BUTTON) || (!!(data->tet_option & TET_OPT_DROP_UP) && gr->justPressed(UP_BUTTON))) {
+      int8_t dr = (data->tet_now_rot + 5 - 2 * (!!(data->tet_option & TET_OPT_ROT_DIR))) % 4;
       tetState |= TET_MOVED;
       if ( ! fit_tetromino(data->tx, data->ty, tetrominoes[data->tet_now_sel][dr])) {
         if(fit_tetromino(data->tx + 1, data->ty, tetrominoes[data->tet_now_sel][dr])) {
