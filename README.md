@@ -18,6 +18,13 @@ If you don't own Arduboy you can still build and play the game online [here](htt
  * **Blocks Arcade** - Tetris clone. Graphics inspied by the Gameboy version. Gameplay features ghost piece, wall kicks and lock delay.
     ### Fetures
     - Classic Tetris gameplay
+    - Reconfigurable buttons: While playing the game, hold together Left and Right and then press Up, Down or A to change function. The changes are saved in the program memory when the game is paused. They are reset with the scores.
+
+        - Up: Instant drop/rotate
+        - Down: fast/instant drop
+        - A: rotate (counter) clockwise - This also affects Up if configured as rotate.
+
+
     ### TODO:
     - Wall kicks sometimes feel wired
     - Line animation
