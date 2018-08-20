@@ -50,41 +50,16 @@ static void platform_copy(struct platform_t src, struct platform_t *dest) {
 	dest->bridge = src.bridge;
 }
 
-static void platform_new(void) {
-	struct platform_t platformFuture;
-	uint8_t distance;
-	bonus = 0;
-
-	data->platformNext.bridge =
-		platform_end(data->platformCurr) + bridge - data->platformNext.x;
-
-	platform_copy(data->platformNext, &data->platformCurr);
-	data->platformCurr.x = bridge;
-	platform_random(data->platformCurr, &data->platformNext);
-	data->platformNext.bridge = bridge = 0;
-	distance = data->platformNext.x - platform_end(data->platformCurr);
-	if(distance > BONUS_OFFSET + 3 && random(2) == 0) {
-		bonus = platform_end(data->platformCurr) + 2 + random(distance - BONUS_OFFSET - 2);
-	}
-}
-
 static void display_platform(struct platform_t platform, uint8_t color) {
-	uint8_t bridge_start;
 	gr->fillRect(platform.x, PLATFORM_LEVEL, platform.width, 9, color);
 	gr->drawPixel(platform.x + platform.width / 2, PLATFORM_LEVEL+2, BLACK);
-	if(platform.bridge) {
-		bridge_start = 0;
-		gr->drawFastHLine(bridge_start,
+	if(platform.bridge && platform.x > 0) {
+		gr->drawFastHLine(0,
 		BRIDGE_LEVEL,
-		platform.x + platform.bridge - bridge_start, color);
+		platform.x + platform.bridge, color);
 	}
 }
 
-
-static void display_floor(void) {
-	display_platform(data->platformCurr, WHITE);
-	display_platform(data->platformNext, WHITE);
-}
 
 static void display_hero(int8_t state, int8_t x, int8_t y, uint8_t color) {
 	int8_t foot = y + 8;
@@ -105,11 +80,6 @@ static void display_hero(int8_t state, int8_t x, int8_t y, uint8_t color) {
 	}
 }
 
-static void display_bridge(uint8_t color) {
-	gr->drawFastHLine(platform_end(data->platformCurr),
-		BRIDGE_LEVEL, bridge, color);
-}
-
 static void display_background(void) {
 	gr->clear();
 	// The score
@@ -127,10 +97,50 @@ static void display_background(void) {
 	}
 
 	if(bridge) {
-		display_bridge(WHITE);
+		gr->drawFastHLine(platform_end(data->platformCurr),
+			BRIDGE_LEVEL, bridge, WHITE);
 	}
 
-	display_floor();
+	display_platform(data->platformCurr, WHITE);
+	display_platform(data->platformNext, WHITE);
+}
+#define SCROLL_STEP 2
+static void platform_new(void) {
+	struct platform_t platformFuture;
+	int8_t distance;
+	bonus = 0;
+
+	platform_random(data->platformNext, &platformFuture);
+
+	distance = platform_end(data->platformCurr);
+	platformFuture.x += distance * 2;
+	while(distance > SCROLL_STEP) {
+		if(! gr->nextFrame()) continue;
+		data->platformCurr.x -= SCROLL_STEP;
+		data->platformNext.x -= SCROLL_STEP;
+		platformFuture.x -= SCROLL_STEP * 3;
+		distance -= SCROLL_STEP;
+		display_background();
+		display_platform(platformFuture, WHITE);
+		display_hero(0, distance + bridge, HERO_LEVEL, WHITE);
+		gr->display();
+	}
+
+
+	data->platformNext.bridge =
+		platform_end(data->platformCurr) + bridge - data->platformNext.x;
+
+	distance = data->platformNext.x - platform_end(data->platformCurr) - 1;
+
+	platform_copy(data->platformNext, &data->platformCurr);
+	data->platformCurr.x = distance;
+	// platform_random(data->platformCurr, &data->platformNext);
+	platform_copy(platformFuture, &data->platformNext);
+	data->platformNext.bridge = bridge = 0;
+	distance = data->platformNext.x - platform_end(data->platformCurr);
+	if(distance > BONUS_OFFSET + 3 && random(2) == 0) {
+		bonus = platform_end(data->platformCurr) + 2 + random(distance - BONUS_OFFSET - 2);
+	}
 }
 
 static void hero_fall(int8_t x, int8_t y) {
