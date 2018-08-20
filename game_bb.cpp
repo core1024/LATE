@@ -7,6 +7,10 @@
 #define BRIDGE_LEVEL 54
 #define PLATFORM_LEVEL 55
 
+#define HILLS 9
+const uint8_t bg_hills[][2] = {{0, 35}, {72, 20}, {96, 30}, {110, 26}, {127, 35},
+ {199, 20}, {223, 30}, {237, 26}, {254, 35}};
+
 struct platform_t {
 	int8_t x;
 	int8_t width;
@@ -20,6 +24,7 @@ struct data_t {
 	uint8_t bonus;
 	struct platform_t platformCurr;
 	struct platform_t platformNext;
+	int8_t bg;
 };
 
 static Arduboy2 *gr;
@@ -82,6 +87,14 @@ static void display_hero(int8_t state, int8_t x, int8_t y, uint8_t color) {
 
 static void display_background(void) {
 	gr->clear();
+
+	// The hills
+	data->bg = data->bg % 128;
+	for(int i = 0;++i < HILLS;) {
+		gr->drawLine(bg_hills[i - 1][0] - data->bg, bg_hills[i - 1][1],
+		bg_hills[i][0] - data->bg, bg_hills[i][1]);
+	}
+
 	// The score
 	gr->drawBitmap(64+29, 1, cupBmp, 8, 8, WHITE);
 	gr->fillRect(65, 2, 28, 5, BLACK);
@@ -116,6 +129,7 @@ static void platform_new(void) {
 	platformFuture.x += distance * 2;
 	while(distance > SCROLL_STEP) {
 		if(! gr->nextFrame()) continue;
+		data->bg++;
 		data->platformCurr.x -= SCROLL_STEP;
 		data->platformNext.x -= SCROLL_STEP;
 		platformFuture.x -= SCROLL_STEP * 3;
@@ -335,6 +349,7 @@ static void game_on(void) {
 		}
 		gr->pollButtons();
 		display_background();
+
 		display_hero(0, platform_end(data->platformCurr) - HERO_OFFSET,
 			HERO_LEVEL, WHITE);
 		if(buttonPressed(gr) && ! gr->justPressed(B_BUTTON)) {
