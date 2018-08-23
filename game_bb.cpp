@@ -6,14 +6,24 @@
 #define BONUS_OFFSET 5
 #define BRIDGE_LEVEL 54
 #define PLATFORM_LEVEL 55
+#define PLATFORM_MIN_DISTANCE 5
+#define PLATFORM_MIN_WIDTH 5
+#define PLATFORM_MAX_WIDTH 15
+#define SCROLL_STEP 2
+#define SCROLL_MULTIPLIER 3
+#define BONUS_LIMIT 50
+
+#define platform_end(platform) (platform.x + platform.width - 1)
 
 #define HILLS 9
-const uint8_t bg_hills[][2] = {{0, 35}, {72, 20}, {96, 30}, {110, 26}, {127, 35},
- {199, 20}, {223, 30}, {237, 26}, {254, 35}};
+
+const uint8_t bg_hills[][2] = {{0, 35}, {72, 20}, {96, 30}, {110, 26},
+	{127, 35}, {199, 20}, {223, 30}, {237, 26}, {254, 35}};
 
 struct platform_t {
 	int8_t x;
 	int8_t width;
+	// TODO: There is only one bridge shown at a time. We can get rid of this
 	int8_t bridge;
 };
 
@@ -25,34 +35,30 @@ struct data_t {
 	struct platform_t platformCurr;
 	struct platform_t platformNext;
 	int8_t bg;
+	uint8_t bonus_next;
+	uint8_t bonus_type;
 };
 
 static Arduboy2 *gr;
 
 const uint8_t spriteMap[][5] PROGMEM = {
-   {0b11100, 0b11101, 0b00010, 0b11101, 0b11100}
+	{0b00110, 0b01111, 0b11110, 0b01111, 0b00110},
+	{0b01110, 0b10001, 0b10101, 0b10001, 0b01110},
+	{0b11000, 0b11000, 0b11101, 0b11000, 0b11000}
 };
 
 
 static struct data_t *data;
 
 static uint8_t bridge;
-static uint8_t bonus;
 
-static int8_t platform_end(struct platform_t platform) {
-	return platform.x + platform.width - 1;
-}
+static void platform_random(struct platform_t *platform) {
+	uint8_t width = data->bonus_type == 2 ? 15 : random(PLATFORM_MIN_WIDTH, PLATFORM_MAX_WIDTH);
+	platform->x = platform_end(data->platformNext) - platform_end(data->platformCurr) +
+		(data->bonus_type == 1 ? PLATFORM_MIN_DISTANCE :
+		random(PLATFORM_MIN_DISTANCE, BRIDGE_LEVEL - width));
 
-static void platform_random(struct platform_t prev, struct platform_t *platform) {
-	platform->x = platform_end(prev) + random(2, BRIDGE_LEVEL - 20);
-	platform->width = random(5, 15);
-	platform->bridge = 0;
-}
-
-static void platform_copy(struct platform_t src, struct platform_t *dest) {
-	dest->x = src.x;
-	dest->width = src.width;
-	dest->bridge = src.bridge;
+	platform->width = width;
 }
 
 static void display_platform(struct platform_t platform, uint8_t color) {
@@ -101,12 +107,14 @@ static void display_background(void) {
 	drawNumber(gr, 65, 2, data->score, WHITE, 7);
 	gr->fillRect(102, 2, 26, 5, BLACK);
 	drawNumber(gr, 102, 2, data->hiScore, WHITE, 0);
-	gr->drawBitmap(64+30, 10, spriteMap[0], BONUS_OFFSET, BONUS_OFFSET, WHITE);
-	drawNumber(gr, 102, 10, data->bonus, WHITE, 0);
 
-	if(bonus) {
-		gr->drawBitmap(bonus, PLATFORM_LEVEL + 2,
-			spriteMap[0], BONUS_OFFSET, BONUS_OFFSET, WHITE);
+	for(int i = 0;i < ceil((float)data->bonus / BONUS_OFFSET);i++) {
+		gr->drawBitmap(1 + i * (BONUS_OFFSET + 1), 1, spriteMap[0], (i + 1) * BONUS_OFFSET > data->bonus ? data->bonus % BONUS_OFFSET : BONUS_OFFSET, BONUS_OFFSET, WHITE);
+	}
+
+	if(data->bonus_next > 0) {
+		gr->drawBitmap(data->bonus_next, PLATFORM_LEVEL + 2,
+			spriteMap[data->bonus_type], BONUS_OFFSET, BONUS_OFFSET, WHITE);
 	}
 
 	if(bridge) {
@@ -117,22 +125,24 @@ static void display_background(void) {
 	display_platform(data->platformCurr, WHITE);
 	display_platform(data->platformNext, WHITE);
 }
-#define SCROLL_STEP 2
+
 static void platform_new(void) {
 	struct platform_t platformFuture;
 	int8_t distance;
-	bonus = 0;
 
-	platform_random(data->platformNext, &platformFuture);
+	platform_random(&platformFuture);
+	platformFuture.bridge = 0;
+	data->bonus_type = 0;
+	data->bonus_next = 0;
 
-	distance = platform_end(data->platformCurr);
-	platformFuture.x += distance * 2;
-	while(distance > SCROLL_STEP) {
+	distance = floor(platform_end(data->platformCurr) / SCROLL_STEP) * SCROLL_STEP;
+	platformFuture.x += distance * SCROLL_MULTIPLIER;
+	while(distance >= SCROLL_STEP) {
 		if(! gr->nextFrame()) continue;
 		data->bg++;
 		data->platformCurr.x -= SCROLL_STEP;
 		data->platformNext.x -= SCROLL_STEP;
-		platformFuture.x -= SCROLL_STEP * 3;
+		platformFuture.x -= SCROLL_STEP * SCROLL_MULTIPLIER;
 		distance -= SCROLL_STEP;
 		display_background();
 		display_platform(platformFuture, WHITE);
@@ -144,16 +154,15 @@ static void platform_new(void) {
 	data->platformNext.bridge =
 		platform_end(data->platformCurr) + bridge - data->platformNext.x;
 
-	distance = data->platformNext.x - platform_end(data->platformCurr) - 1;
-
-	platform_copy(data->platformNext, &data->platformCurr);
-	data->platformCurr.x = distance;
-	// platform_random(data->platformCurr, &data->platformNext);
-	platform_copy(platformFuture, &data->platformNext);
-	data->platformNext.bridge = bridge = 0;
+	data->platformNext.x -= platform_end(data->platformCurr);
+	data->platformCurr = data->platformNext;
+	data->platformNext = platformFuture;
+	data->platformNext.bridge = 0;
+	bridge = 0;
 	distance = data->platformNext.x - platform_end(data->platformCurr);
 	if(distance > BONUS_OFFSET + 3 && random(2) == 0) {
-		bonus = platform_end(data->platformCurr) + 2 + random(distance - BONUS_OFFSET - 2);
+		data->bonus_next = platform_end(data->platformCurr) + 2 + random(distance - BONUS_OFFSET - 2);
+		data->bonus_type = random(3);
 	}
 }
 
@@ -183,7 +192,7 @@ static int8_t hero_walk(int8_t from, int8_t to) {
 	int8_t hero_state = 0;
 	int8_t claim_bonus = 0;
 	int8_t i = from;
-	while(i < to /* && ! gr->justPressed(B_BUTTON) */) {
+	while(i < to) {
 		if (!gr->nextFrame()) {
 			continue;
 		}
@@ -210,8 +219,8 @@ static int8_t hero_walk(int8_t from, int8_t to) {
 		}
 
 		// Pick bonus
-		if(hero_state && i + HERO_OFFSET >= bonus && i <= bonus + BONUS_OFFSET) {
-			bonus = 0;
+		if(hero_state && i + HERO_OFFSET >= data->bonus_next && i <= data->bonus_next + BONUS_OFFSET) {
+			data->bonus_next = 0;
 			claim_bonus = 1;
 		}
 		gr->idle();
@@ -249,7 +258,7 @@ static void place_bridge(int8_t bridge_x) {
 		gr->drawLine(bridge_x, BRIDGE_LEVEL, x, y, WHITE);
 		gr->display();
 		gr->drawLine(bridge_x, BRIDGE_LEVEL, x, y, BLACK);
-		d+=PI / 15;
+		d += PI / 15;
 		gr->idle();
 	}
 	bridge = bridge_short ? 0 : bridge;
@@ -288,61 +297,38 @@ static void build_bridge(void) {
 		max(platform_end(data->platformNext) - HERO_OFFSET,
 		bridge_x + bridge));
 
+	if(!claim_bonus) {
+		data->bonus_next = 0;
+		data->bonus_type = 0;
+	}
+
 	if(data->gameOn) {
 		claim_bonus += bridge_x + bridge - 1 == data->platformNext.x + data->platformNext.width / 2;
-		data->bonus += claim_bonus;
+		if(! data->bonus_type) {
+			data->bonus = min(data->bonus + claim_bonus, BONUS_LIMIT);
+		}
 		bonus_up(claim_bonus);
 		hero_score(claim_bonus + 1);
-	}
-}
-
-static void bonus_for_live(void) {
-	if(data->bonus < 5) return;
-	gr->fillRoundRect(4, 16, 120, 32, 5, BLACK);
-	gr->drawRoundRect(4, 16, 120, 32, 5, WHITE);
-	gr->setCursor(7, 19);
-	gr->print(F("Spend 5 bonus"));
-	gr->setCursor(7, 27);
-	gr->print(F("points to continue?"));
-
-	arduboy.drawBitmap(7, 38, aBmp, 7, 7, WHITE);
-	arduboy.setCursor(17, 38);
-	arduboy.print(F("Accept"));
-
-	arduboy.drawBitmap(66, 38, bBmp, 7, 7, WHITE);
-	arduboy.setCursor(76, 38);
-	arduboy.print(F("Decline"));
-
-	gr->display();
-	for(;;) {
-		if (!gr->nextFrame()) {
-			continue;
-		}
-		gr->pollButtons();
-		if(gr->justPressed(A_BUTTON)) {
-			data->bonus -= 5;
-			data->gameOn = 1;
-			bridge = 0;
-			return;
-		}
-		if(gr->justPressed(B_BUTTON)) {
-			return;
-		}
 	}
 }
 
 static void game_new(void) {
 	data->gameOn = 1;
 	data->score = 0;
+	data->bonus = 0;
+	data->bonus_next = 0;
+	data->bonus_type = 0;
 	data->platformCurr.x = -19;
 	data->platformCurr.width = 36;
-	platform_random(data->platformCurr, &data->platformNext);
 	data->platformCurr.bridge = 0;
+	data->platformNext.x = 32;
+	data->platformNext.width = 0;
 	data->platformNext.bridge = 0;
+	platform_random(&data->platformNext);
 }
 
 static void game_on(void) {
-	bonus = bridge = 0;
+	bridge = 0;
 	while(data->gameOn && ! gr->justPressed(B_BUTTON)) {
 		if (!gr->nextFrame()) {
 			continue;
@@ -357,8 +343,9 @@ static void game_on(void) {
 			if(data->gameOn) {
 				// Place new platform
 				platform_new();
-			} else {
-				bonus_for_live();
+			} else if(data->bonus >= BONUS_OFFSET) {
+				data->bonus -= BONUS_OFFSET;
+				data->gameOn = 1;
 			}
 		}
 		gr->display();
