@@ -12,6 +12,8 @@
 #define SCROLL_STEP 2
 #define SCROLL_MULTIPLIER 3
 #define BONUS_LIMIT 50
+#define BONUS_CLOSE 1
+#define BONUS_FAT 2
 
 #define platform_end(platform) (platform.x + platform.width - 1)
 
@@ -51,14 +53,16 @@ const uint8_t spriteMap[][5] PROGMEM = {
 static struct data_t *data;
 
 static uint8_t bridge;
+static uint8_t bonus_promote;
 
 static void platform_random(struct platform_t *platform) {
-	uint8_t width = data->bonus_type == 2 ? 15 : random(PLATFORM_MIN_WIDTH, PLATFORM_MAX_WIDTH);
+	uint8_t width = (bonus_promote & BONUS_FAT) ? 15 : random(PLATFORM_MIN_WIDTH, PLATFORM_MAX_WIDTH);
 	platform->x = platform_end(data->platformNext) - platform_end(data->platformCurr) +
-		(data->bonus_type == 1 ? PLATFORM_MIN_DISTANCE :
+		((bonus_promote & BONUS_CLOSE) ? PLATFORM_MIN_DISTANCE :
 		random(PLATFORM_MIN_DISTANCE, BRIDGE_LEVEL - width));
 
 	platform->width = width;
+	bonus_promote = 0;
 }
 
 static void display_platform(struct platform_t platform, uint8_t color) {
@@ -220,7 +224,9 @@ static int8_t hero_walk(int8_t from, int8_t to) {
 
 		// Pick bonus
 		if(hero_state && i + HERO_OFFSET >= data->bonus_next && i <= data->bonus_next + BONUS_OFFSET) {
+			bonus_promote = data->bonus_type;
 			data->bonus_next = 0;
+			data->bonus_type = 0;
 			claim_bonus = 1;
 		}
 		gr->idle();
@@ -304,11 +310,12 @@ static void build_bridge(void) {
 
 	if(data->gameOn) {
 		claim_bonus += bridge_x + bridge - 1 == data->platformNext.x + data->platformNext.width / 2;
-		if(! data->bonus_type) {
+		hero_score(claim_bonus + 1);
+		bonus_up(claim_bonus);
+		claim_bonus -= !!bonus_promote;
+		if(claim_bonus) {
 			data->bonus = min(data->bonus + claim_bonus, BONUS_LIMIT);
 		}
-		bonus_up(claim_bonus);
-		hero_score(claim_bonus + 1);
 	}
 }
 
@@ -346,6 +353,7 @@ static void game_on(void) {
 			} else if(data->bonus >= BONUS_OFFSET) {
 				data->bonus -= BONUS_OFFSET;
 				data->gameOn = 1;
+				bridge = 0;
 			}
 		}
 		gr->display();
