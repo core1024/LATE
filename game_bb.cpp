@@ -150,7 +150,7 @@ static void platform_new(void) {
 		distance -= SCROLL_STEP;
 		display_background();
 		display_platform(platformFuture, WHITE);
-		display_hero(0, distance + bridge, HERO_LEVEL, WHITE);
+		display_hero(0, platform_end(data->platformNext) - HERO_OFFSET, HERO_LEVEL, WHITE);
 		gr->display();
 	}
 
@@ -192,10 +192,15 @@ static void hero_score(int8_t up) {
 
 
 static int8_t hero_walk(int8_t from, int8_t to) {
-	int8_t bridge_end;
+	const int8_t bridge_end = platform_end(data->platformCurr) + bridge;
+	const int8_t bridge_over = bridge_end - 1 > platform_end(data->platformNext);
 	int8_t hero_state = 0;
 	int8_t claim_bonus = 0;
 	int8_t i = from;
+
+	if(! bridge_over) {
+		to = min(to, platform_end(data->platformNext) - HERO_OFFSET);
+	}
 	while(i < to) {
 		if (!gr->nextFrame()) {
 			continue;
@@ -209,13 +214,9 @@ static int8_t hero_walk(int8_t from, int8_t to) {
 		gr->display();
 
 		// Game over?
-		bridge_end = platform_end(data->platformCurr) + bridge;
 		// TODO: simplify this condition
-		if((i + HERO_OFFSET >= bridge_end &&
-			(data->platformNext.x >= bridge_end ||
-			bridge_end - 1 > platform_end(data->platformNext))) ||
-			(hero_state &&
-			i + HERO_OFFSET + HERO_OFFSET > data->platformNext.x)) {
+		if((i + HERO_OFFSET >= bridge_end && (data->platformNext.x >= bridge_end || bridge_over)) ||
+			(hero_state && i + HERO_OFFSET + HERO_OFFSET > data->platformNext.x)) {
 			data->gameOn = 0;
 			hero_fall(i + HERO_OFFSET + (hero_state ? -1 : 1),
 				HERO_LEVEL - (hero_state ? 0 : HERO_HEIGHT));
