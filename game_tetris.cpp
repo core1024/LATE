@@ -14,7 +14,8 @@
 enum tet_option_t: uint8_t {
 	TET_OPT_ROT_DIR = 1,
 	TET_OPT_DROP_UP = 2,
-	TET_OPT_DROP_DN = 4
+	TET_OPT_DROP_DN = 4,
+	TET_OPT_HIDE_GHOST = 8
 };
 
 static uint8_t level_speed[NUM_LEVELS] = {53, 49, 45, 41, 37, 33, 28, 22, 17, 11, 10, 9, 8, 7, 6, 6, 5, 5, 4, 4, 3};
@@ -45,10 +46,16 @@ static struct data_t *data;
 static unsigned long button_wait_time;
 
 const uint8_t spriteMap[][7] PROGMEM = {
+	// RotR
 	{0b00001100, 0b00010010, 0b00100001, 0b00100001, 0b00001010, 0b00001100, 0b00001110},
+	// RotL
 	{0b00001110, 0b00001100, 0b00001010, 0b00100001, 0b00100001, 0b00010010, 0b00001100},
+	// ->  Dn
 	{0b00001000, 0b00010000, 0b00100000, 0b01111111, 0b00100000, 0b00010000, 0b00001000},
-	{0b01000100, 0b01001000, 0b01010000, 0b01111111, 0b01010000, 0b01001000, 0b01000100}
+	// ->| Dn
+	{0b01000100, 0b01001000, 0b01010000, 0b01111111, 0b01010000, 0b01001000, 0b01000100},
+	// Ghost
+	{0b00000000, 0b01111100, 0b00111010, 0b01111111, 0b00111010, 0b01111100, 0b00000000}
 };
 
 static const uint16_t tetrominoes[7][4] = {
@@ -265,7 +272,7 @@ static void display_now_next() {
 		uint8_t dx3tx = dx + 3 * data->tx;
 
 		// Ghost
-		if(g > data->ty && bitRead(tetrominoes[data->tet_now_sel][data->tet_now_rot], i)) {
+		if(!(data->tet_option & TET_OPT_HIDE_GHOST) && g > data->ty && bitRead(tetrominoes[data->tet_now_sel][data->tet_now_rot], i)) {
 			gr->drawPixel(dx3tx, dy + 3 * g - 6);
 		}
 
@@ -326,23 +333,28 @@ static void game_on() {
 		}
 		gr->pollButtons();
 
-		if (gr->justPressed(B_BUTTON)) {
-			return;
-		}
-
 		if(gr->pressed(LEFT_BUTTON) && gr->pressed(RIGHT_BUTTON)) {
 			gr->clear();
 			gr->drawBitmap(28, 28, dPadBmp, 7, 7, WHITE);
-			gr->drawBitmap(78, 28, aBmp, 7, 7, WHITE);
+			gr->drawBitmap(78, 20, aBmp, 7, 7, WHITE);
+			gr->drawBitmap(78, 36, bBmp, 7, 7, WHITE);
 
 			gr->drawBitmap(28, 12, spriteMap[(data->tet_option & TET_OPT_DROP_UP) ? data->tet_option & TET_OPT_ROT_DIR : 3], 7, 7, WHITE);
 
 			gr->drawBitmap(28, 44, spriteMap[2 + !!(data->tet_option & TET_OPT_DROP_DN)], 7, 7, WHITE);
 
-			gr->drawBitmap(92, 28, spriteMap[data->tet_option & TET_OPT_ROT_DIR], 7, 7, WHITE);
+			gr->drawBitmap(92, 20, spriteMap[data->tet_option & TET_OPT_ROT_DIR], 7, 7, WHITE);
+
+			if(!(data->tet_option & TET_OPT_HIDE_GHOST)) {
+				gr->drawBitmap(92, 36, spriteMap[4], 7, 7, WHITE);
+			}
 
 			if(gr->justPressed(A_BUTTON)) {
 				data->tet_option ^= TET_OPT_ROT_DIR;
+				continue;
+			}
+			if (gr->justPressed(B_BUTTON)) {
+				data->tet_option ^= TET_OPT_HIDE_GHOST;
 				continue;
 			}
 			if(gr->justPressed(UP_BUTTON)) {
@@ -358,6 +370,10 @@ static void game_on() {
 		} else if(gr->justReleased(LEFT_BUTTON) || gr->justReleased(RIGHT_BUTTON)) {
 			display_background();
 			display_stats();
+		}
+
+		if (gr->justPressed(B_BUTTON)) {
+			return;
 		}
 
 		tetState &= ~TET_MOVED;
