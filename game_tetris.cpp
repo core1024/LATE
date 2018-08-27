@@ -321,6 +321,49 @@ static void display_stats() {
 	print_pad(data->lines);
 }
 
+static void game_settings() {
+	while(!(gr->justPressed(LEFT_BUTTON) || gr->justPressed(RIGHT_BUTTON))) {
+		if (!gr->nextFrame()) {
+			continue;
+		}
+		gr->pollButtons();
+		gr->clear();
+		gr->drawBitmap(28, 28, dPadBmp, 7, 7, WHITE);
+		gr->drawBitmap(78, 20, aBmp, 7, 7, WHITE);
+		gr->drawBitmap(78, 36, bBmp, 7, 7, WHITE);
+
+		gr->drawBitmap(28, 12, spriteMap[(data->tet_option & TET_OPT_DROP_UP) ? data->tet_option & TET_OPT_ROT_DIR : 3], 7, 7, WHITE);
+
+		gr->drawBitmap(28, 44, spriteMap[2 + !!(data->tet_option & TET_OPT_DROP_DN)], 7, 7, WHITE);
+
+		gr->drawBitmap(92, 20, spriteMap[data->tet_option & TET_OPT_ROT_DIR], 7, 7, WHITE);
+
+		if(!(data->tet_option & TET_OPT_HIDE_GHOST)) {
+			gr->drawBitmap(92, 36, spriteMap[4], 7, 7, WHITE);
+		}
+
+		if(gr->justPressed(A_BUTTON)) {
+			data->tet_option ^= TET_OPT_ROT_DIR;
+			continue;
+		}
+		if (gr->justPressed(B_BUTTON)) {
+			data->tet_option ^= TET_OPT_HIDE_GHOST;
+			continue;
+		}
+		if(gr->justPressed(UP_BUTTON)) {
+			data->tet_option ^= TET_OPT_DROP_UP;
+			continue;
+		}
+		if(gr->justPressed(DOWN_BUTTON)) {
+			data->tet_option ^= TET_OPT_DROP_DN;
+			continue;
+		}
+		gr->display();
+		gr->idle();
+	}
+	while(!gr->nextFrame()) gr->idle();
+}
+
 static void game_on() {
 	uint16_t lockAfterXFrames = gr->frameCount + LOCK_TIME;
 	uint8_t tetState = 0;
@@ -332,45 +375,6 @@ static void game_on() {
 			continue;
 		}
 		gr->pollButtons();
-
-		if(gr->pressed(LEFT_BUTTON) && gr->pressed(RIGHT_BUTTON)) {
-			gr->clear();
-			gr->drawBitmap(28, 28, dPadBmp, 7, 7, WHITE);
-			gr->drawBitmap(78, 20, aBmp, 7, 7, WHITE);
-			gr->drawBitmap(78, 36, bBmp, 7, 7, WHITE);
-
-			gr->drawBitmap(28, 12, spriteMap[(data->tet_option & TET_OPT_DROP_UP) ? data->tet_option & TET_OPT_ROT_DIR : 3], 7, 7, WHITE);
-
-			gr->drawBitmap(28, 44, spriteMap[2 + !!(data->tet_option & TET_OPT_DROP_DN)], 7, 7, WHITE);
-
-			gr->drawBitmap(92, 20, spriteMap[data->tet_option & TET_OPT_ROT_DIR], 7, 7, WHITE);
-
-			if(!(data->tet_option & TET_OPT_HIDE_GHOST)) {
-				gr->drawBitmap(92, 36, spriteMap[4], 7, 7, WHITE);
-			}
-
-			if(gr->justPressed(A_BUTTON)) {
-				data->tet_option ^= TET_OPT_ROT_DIR;
-				continue;
-			}
-			if (gr->justPressed(B_BUTTON)) {
-				data->tet_option ^= TET_OPT_HIDE_GHOST;
-				continue;
-			}
-			if(gr->justPressed(UP_BUTTON)) {
-				data->tet_option ^= TET_OPT_DROP_UP;
-				continue;
-			}
-			if(gr->justPressed(DOWN_BUTTON)) {
-				data->tet_option ^= TET_OPT_DROP_DN;
-				continue;
-			}
-			gr->display();
-			continue;
-		} else if(gr->justReleased(LEFT_BUTTON) || gr->justReleased(RIGHT_BUTTON)) {
-			display_background();
-			display_stats();
-		}
 
 		if (gr->justPressed(B_BUTTON)) {
 			return;
@@ -507,6 +511,10 @@ void gameTetris(Arduboy2 *sgr, uint8_t *gdat, uint8_t menu, uint8_t *gameOn, uin
 	}
 
 	if (menu != MENU_EXIT) {
+		if(gr->pressed(RIGHT_BUTTON)) {
+			game_settings();
+		}
+
 		gr->setTextBackground(WHITE);
 		gr->setTextColor(BLACK);
 
